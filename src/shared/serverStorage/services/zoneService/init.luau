@@ -73,11 +73,14 @@ function ZoneService:listenToZoneEntriesAndExits(zone)
 			end
 
 			table.insert(zoneProfileReference.PlayersInZone, playerThatEntered)
+
+			local lastZone = self.PlayerProfiles[playerThatEntered]
 			self.PlayerProfiles[playerThatEntered] = zone:GetAttribute("ZoneType")
 
 			self.Client.EnteredZone:Fire(playerThatEntered, {
 				Asset = zone,
 				ZoneType = zone:GetAttribute("ZoneType"),
+				LastZoneType = lastZone,
 			})
 		end)
 	)
@@ -98,11 +101,14 @@ function ZoneService:listenToZoneEntriesAndExits(zone)
 			local index = self:playerInZone(zoneProfileReference, playerThatLeft)
 			if index then
 				zoneProfileReference.PlayersInZone[index] = nil
+
+				local lastZone = self.PlayerProfiles[playerThatLeft]
 				self.PlayerProfiles[playerThatLeft] = nil
 
 				self.Client.LeftZone:Fire(playerThatLeft, {
 					Asset = zone,
 					ZoneType = zone:GetAttribute("ZoneType"),
+					LastZoneType = lastZone,
 				})
 			end
 		end)

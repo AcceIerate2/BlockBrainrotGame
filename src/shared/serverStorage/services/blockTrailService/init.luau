@@ -4,6 +4,11 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 -- Packages
 local knit = require(ReplicatedStorage.src.Packages.knit)
 
+-- Helper Functions
+local function isPlayer(player: Player?): boolean
+	return typeof(player) == "Instance" and player:IsA("Player")
+end
+
 -->
 local BlockTrailService = knit.CreateService({
 	Name = "BlockTrailService",
@@ -11,8 +16,30 @@ local BlockTrailService = knit.CreateService({
 })
 
 -- Client Exposed Methods
+function BlockTrailService.Client:ValidatePlace(player: Player, blockCFrame: CFrame)
+	return self.Server:ValidatePlace(player, blockCFrame)
+end
+
 -- Private Methods
 -- Public Methods
+function BlockTrailService:ValidatePlace(player: Player, blockCFrame: CFrame)
+	assert(isPlayer(player), "player arg must be a Player Instance")
+	assert(typeof(blockCFrame) == "CFrame", "blockCFrame arg must be a CFrame")
+
+	local blocksValueObject = self.DataService:GetValueObject(player, "Blocks")
+	if blocksValueObject:Get() < 1 then
+		return {
+			Status = false,
+			Reason = "NotEnoughBlocks",
+		}
+	end
+
+	blocksValueObject:Set(blocksValueObject:Get() - 1)
+	return {
+		Status = true,
+	}
+end
+
 -- LifeCycle
 function BlockTrailService:KnitInit()
 	self.DataService = knit.GetService("DataService")
