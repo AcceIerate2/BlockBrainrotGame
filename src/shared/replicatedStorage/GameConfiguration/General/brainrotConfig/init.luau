@@ -1,0 +1,3 @@
+local BrainrotConfig = {}
+
+return BrainrotConfig

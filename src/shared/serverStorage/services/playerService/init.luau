@@ -9,6 +9,7 @@ local knit = require(ReplicatedStorage.src.Packages.knit)
 local TypeCheck = require(ReplicatedStorage.src.utility.TypeCheck)
 local InstanceCreator = require(ReplicatedStorage.src.utility.InstanceCreator)
 local CollisionHandler = require(ReplicatedStorage.src.utility.CollisionHandler)
+local AvatarHeadshot = require(ReplicatedStorage.src.utility.AvatarHeadshot)
 
 -->
 local PlayerService = knit.CreateService({
@@ -26,7 +27,16 @@ function PlayerService:load(player: Player)
 	playerDisconnectFunctions.profileStoreDisconnectFunction = profileStoreDisconnectFunction
 
 	-- DataService
-	playerDisconnectFunctions.dataServiceDisconnectFunction = self.DataService:connectProfile(player, profile.Data)
+	playerDisconnectFunctions.dataServiceDisconnectFunction = self.DataService:ConnectProfile(player, profile.Data)
+
+	-- Avatar Headshot
+	self.DataService:GetValueObject(player, "AvatarHeadshotAssetId"):Set(AvatarHeadshot(player))
+
+	-- InventoryService
+	playerDisconnectFunctions.inventoryServiceDisconnectFunction = self.InventoryService:LoadTools(player)
+
+	-- PlotService
+	playerDisconnectFunctions.playerServiceDisconnectFunction = self.PlotService:ConnectPlot(player)
 
 	-- Gamepasses
 	self.MonetizationService:loadGamepasses(player)
@@ -78,6 +88,8 @@ function PlayerService:KnitInit()
 	self.DataService = knit.GetService("DataService")
 	self.MonetizationService = knit.GetService("MonetizationService")
 	self.BadgeService = knit.GetService("BadgeService")
+	self.InventoryService = knit.GetService("InventoryService")
+	self.PlotService = knit.GetService("PlotService")
 
 	-- Player Connections
 	Players.PlayerAdded:Connect(function(player: Player)
