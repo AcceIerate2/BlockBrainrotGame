@@ -3,6 +3,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
 -- Packages
+local brainrotConfig = require(ReplicatedStorage.src.GameConfiguration.General.brainrotConfig)
 local knit = require(ReplicatedStorage.src.Packages.knit)
 
 -->
@@ -44,10 +45,27 @@ function BrainrotHandler.GetLevelFromBrainrotReferenceId(brainrotReferenceId: st
 	return typeof(level) == "number" and level or 1
 end
 
-function BrainrotHandler.GetBrainrotBaseCost(brainrotReferenceId: string)
+function BrainrotHandler.GetBrainrotRarity(brainrotReferenceId: string): string
 	assert(typeof(brainrotReferenceId) == "string", "brainrotReferenceId arg must be a string")
 	local brainrotName = BrainrotHandler.GetBrainrotNameFromReferenceId(brainrotReferenceId)
-	return 10
+	for rarity, brainrots in pairs(brainrotConfig) do
+		if brainrots[brainrotName] then
+			return rarity
+		end
+	end
+	return "Common"
+end
+
+function BrainrotHandler.GetBrainrotIncomeRate(brainrotReferenceId: string)
+	assert(typeof(brainrotReferenceId) == "string", "brainrotReferenceId arg must be a string")
+	local brainrotName = BrainrotHandler.GetBrainrotNameFromReferenceId(brainrotReferenceId)
+	local rarity = BrainrotHandler.GetBrainrotRarity(brainrotReferenceId)
+	return brainrotConfig[rarity][brainrotName].IncomeRate
+end
+
+function BrainrotHandler.GetBrainrotBaseCost(brainrotReferenceId: string)
+	assert(typeof(brainrotReferenceId) == "string", "brainrotReferenceId arg must be a string")
+	return BrainrotHandler.GetBrainrotIncomeRate(brainrotReferenceId) * 10
 end
 
 function BrainrotHandler.CalculateLevelCost(brainrotReferenceId: string, level: number)

@@ -11,14 +11,14 @@ local Player = Players.LocalPlayer
 -->
 local Hud = {}
 
-function Hud:ToggleRemoveLastBlockButtonVisibility(toggle: boolean)
-	Player.PlayerGui:WaitForChild("Hud"):WaitForChild("RemoveLastBlock").Visible = toggle
+function Hud:ToggleDropButtonVisibility(toggle: boolean)
+	Player.PlayerGui:WaitForChild("Hud"):WaitForChild("Drop").Visible = toggle
 end
 
 function Hud:Init(player: Player)
 	self.HudController = knit.GetController("HudController")
-	self.HudController.Signals.ToggleRemoveLastBlockButtonVisibility:Connect(function(toggle: boolean)
-		self:ToggleRemoveLastBlockButtonVisibility(toggle)
+	self.HudController.Signals.ToggleDropButtonVisibility:Connect(function(toggle: boolean)
+		self:ToggleDropButtonVisibility(toggle)
 	end)
 end
 

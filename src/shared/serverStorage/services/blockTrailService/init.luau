@@ -13,6 +13,7 @@ end
 local BlockTrailService = knit.CreateService({
 	Name = "BlockTrailService",
 	Client = {},
+	PlayerBlocks = {} :: { [Player]: number },
 })
 
 -- Client Exposed Methods
@@ -22,6 +23,18 @@ end
 
 -- Private Methods
 -- Public Methods
+function BlockTrailService:ClearBlocks(player: Player)
+	assert(isPlayer(player), "player arg must be a Player Instance")
+	self.PlayerBlocks[player] = nil
+end
+
+function BlockTrailService:RefundBlocks(player: Player)
+	assert(isPlayer(player), "player arg must be a Player Instance")
+	local blocksValueObject = self.DataService:GetValueObject(player, "Blocks")
+	blocksValueObject:Set(blocksValueObject:Get() + (self.PlayerBlocks[player] or 0))
+	self:ClearBlocks(player)
+end
+
 function BlockTrailService:ValidatePlace(player: Player, blockCFrame: CFrame)
 	assert(isPlayer(player), "player arg must be a Player Instance")
 	assert(typeof(blockCFrame) == "CFrame", "blockCFrame arg must be a CFrame")
@@ -35,6 +48,11 @@ function BlockTrailService:ValidatePlace(player: Player, blockCFrame: CFrame)
 	end
 
 	blocksValueObject:Set(blocksValueObject:Get() - 1)
+	if typeof(self.PlayerBlocks[player]) ~= "number" then
+		self.PlayerBlocks[player] = 0
+	end
+	self.PlayerBlocks[player] += 1
+
 	return {
 		Status = true,
 	}

@@ -7,6 +7,7 @@ local TypeCheck = require(ReplicatedStorage.src.utility.TypeCheck)
 -->
 local functions = {
 	UpgradeBrainrot = require(script.upgradeBrainrotAction),
+	DropBrainrot = require(script.dropBrainrotAction),
 }
 
 return function(button)

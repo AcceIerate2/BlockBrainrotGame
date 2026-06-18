@@ -9,12 +9,12 @@ local knit = require(ReplicatedStorage.src.Packages.knit)
 local HudController = knit.CreateController({
 	Name = "HudController",
 	Signals = {
-		ToggleRemoveLastBlockButtonVisibility = Signal.new(),
+		ToggleDropButtonVisibility = Signal.new(),
 	},
 })
 
-function HudController:ToggleRemoveLastBlockButtonVisibility(toggle: boolean)
-	self.ToggleRemoveLastBlockButtonVisibility:Fire(toggle)
+function HudController:ToggleDropButtonVisibility(toggle: boolean)
+	self.Signals.ToggleDropButtonVisibility:Fire(toggle)
 end
 
 -- LifeCycle

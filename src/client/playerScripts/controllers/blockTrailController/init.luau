@@ -9,11 +9,17 @@ local knit = require(ReplicatedStorage.src.Packages.knit)
 -- Constants
 local Player = Players.LocalPlayer
 local BlockAssets = ReplicatedStorage:WaitForChild("Assets"):WaitForChild("Blocks")
-
 local CellSize = 4
 local BlockHeight = 4
 
 -- Helper Functions
+local function isDead(): boolean
+	return Player.Character
+			and Player.Character:FindFirstChildOfClass("Humanoid")
+			and Player.Character.Humanoid.Health < 1
+		or false
+end
+
 local function getWorldPosition(): Vector3?
 	local character = Player.Character
 	if not character then
@@ -113,7 +119,7 @@ function BlockTrailController:place(zone: Instance, cellX: number, cellZ: number
 	assert(typeof(cellZ) == "number", "cellZ arg must be a number")
 	assert(typeof(blockCFrame) == "CFrame", "blockCFrame arg must be a CFrame")
 
-	if self.WaitForEnoughBlocks then
+	if self.WaitForEnoughBlocks == true then
 		return
 	end
 
@@ -183,7 +189,8 @@ function BlockTrailController:ClearLocalTrail()
 	self.WaitForEnoughBlocks = false
 end
 
-function BlockTrailController:Connect(zone)
+function BlockTrailController:Connect(payload: { Asset: any, ZoneType: string, LastZoneType: string })
+	local zone = payload.Asset
 	local base = zone.Parent:FindFirstChild("Base")
 	if not base or not base:IsA("BasePart") then
 		return
@@ -194,6 +201,10 @@ function BlockTrailController:Connect(zone)
 	self.LastCellZ = nil
 
 	self.Connection = RunService.RenderStepped:Connect(function()
+		if self.WaitForEnoughBlocks == true or isDead() then
+			return
+		end
+
 		local worldPosition = getWorldPosition()
 		if not worldPosition then
 			return
@@ -230,11 +241,17 @@ end
 function BlockTrailController:KnitInit()
 	self.BlockTrailService = knit.GetService("BlockTrailService")
 	self.DataController = knit.GetController("DataController")
+	self.NotificationController = knit.GetController("NotificationController")
 end
 
 function BlockTrailController:KnitStart()
+	local function update(remainingBlocks: number)
+		self.WaitForEnoughBlocks = remainingBlocks < 1 or false
+	end
+
+	update(self.DataController:GetValue("Blocks"))
 	self.DataController:GetValueChangedSignal("Blocks"):Connect(function(remainingBlocks: number)
-		self.WaitForEnoughBlocks = remainingBlocks < 1
+		update(remainingBlocks)
 	end)
 end
 

@@ -38,6 +38,9 @@ function PlayerService:load(player: Player)
 	-- PlotService
 	playerDisconnectFunctions.playerServiceDisconnectFunction = self.PlotService:ConnectPlot(player)
 
+	-- CarryService
+	playerDisconnectFunctions.carryServiceDisconnectFunction = self.CarryService:Connect(player)
+
 	-- Gamepasses
 	self.MonetizationService:loadGamepasses(player)
 
@@ -66,6 +69,8 @@ function PlayerService:load(player: Player)
 end
 
 function PlayerService:unload(player: Player)
+	self.BlockTrailService:ClearBlocks(player)
+
 	local playerDisconnectFunctions = self.DisconnectFunctions[player]
 	if not TypeCheck.table(playerDisconnectFunctions) then
 		return
@@ -90,6 +95,8 @@ function PlayerService:KnitInit()
 	self.BadgeService = knit.GetService("BadgeService")
 	self.InventoryService = knit.GetService("InventoryService")
 	self.PlotService = knit.GetService("PlotService")
+	self.BlockTrailService = knit.GetService("BlockTrailService")
+	self.CarryService = knit.GetService("CarryService")
 
 	-- Player Connections
 	Players.PlayerAdded:Connect(function(player: Player)

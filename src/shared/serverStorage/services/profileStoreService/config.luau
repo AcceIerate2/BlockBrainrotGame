@@ -18,6 +18,8 @@ return {
 		ExtraPlotFloors = 0,
 		ExtraPlotStands = 0,
 
+		MaxHold = 3,
+
 		LastSeen = 0,
 		JoinedBefore = false,
 		AvatarHeadshotAssetId = "",

@@ -12,11 +12,11 @@ local ZoneController = knit.CreateController({
 -- Private Methods
 function ZoneController:listenToZoneService()
 	self.ZoneService.EnteredZone:Connect(function(payload: { Asset: any, ZoneType: string, LastZoneType: string })
-		knit.GetController(`{payload.ZoneType}Controller`):Connect(payload.Asset)
+		knit.GetController(`{payload.ZoneType}Controller`):Connect(payload)
 	end)
 
 	self.ZoneService.LeftZone:Connect(function(payload: { Asset: any, ZoneType: string, LastZoneType: string })
-		knit.GetController(`{payload.ZoneType}Controller`):Disconnect()
+		knit.GetController(`{payload.ZoneType}Controller`):Disconnect(payload)
 	end)
 end
 
