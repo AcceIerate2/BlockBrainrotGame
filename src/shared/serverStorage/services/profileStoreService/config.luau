@@ -1,3 +1,10 @@
+-- Roblox Services
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+-- Config Modules
+local blocksConfig = require(ReplicatedStorage.src.GameConfiguration.General.blocksConfig)
+
+-->
 return {
 	DataTemplate = {
 		Cash = 1000000,
@@ -11,14 +18,28 @@ return {
 			},
 		},
 
-		Blocks = 15,
-		MaxBlocks = 15,
-		EquippedBlock = "Block",
+		Blocks = {
+			Value = 15,
+			Level = 0,
+		},
+
+		MaxBlocks = {
+			Value = 15,
+			Level = 0,
+		},
+
+		EquippedBlock = blocksConfig.DefaultBlock,
+		OwnedBlocks = {
+			[blocksConfig.DefaultBlock] = true,
+		},
 
 		ExtraPlotFloors = 0,
 		ExtraPlotStands = 0,
 
-		MaxHold = 3,
+		MaxHold = {
+			Value = 1,
+			Level = 0,
+		},
 
 		LastSeen = 0,
 		JoinedBefore = false,

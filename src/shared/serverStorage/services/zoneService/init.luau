@@ -112,6 +112,7 @@ function ZoneService:listenToZoneEntriesAndExits(zone: BasePart)
 						local referenceId = `{brainrotName}_{newGuid}`
 						self.InventoryService:Give(playerThatEntered, referenceId, "BrainrotTool", {
 							Mutation = "Default",
+							Level = 1,
 						})
 					end
 

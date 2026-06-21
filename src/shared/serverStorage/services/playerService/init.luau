@@ -118,4 +118,8 @@ function PlayerService:KnitInit()
 	print(`PlayerService Initiated.`)
 end
 
+function PlayerService:KnitStart()
+	Players.RespawnTime = 1
+end
+
 return PlayerService

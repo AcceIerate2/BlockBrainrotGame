@@ -10,7 +10,7 @@ local NumberShortner = require(ReplicatedStorage.src.utility.NumberShortner)
 -->
 return function(button)
 	local brainrotReferenceId = button:GetAttribute("BrainrotReferenceId")
-	knit.GetService("UpgradeService")
+	knit.GetService("BrainrotUpgradeService")
 		:Upgrade(brainrotReferenceId)
 		:andThen(
 			function(

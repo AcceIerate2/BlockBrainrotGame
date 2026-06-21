@@ -22,6 +22,10 @@ local function updateProximityPromptText(newText: string, standAsset: any)
 	getProximityPrompt(standAsset).ActionText = newText
 end
 
+local function updateProximityPromptObjectText(newText: string, standAsset: any)
+	getProximityPrompt(standAsset).ObjectText = newText
+end
+
 local function validateCashCollectPart(partThatTouched: BasePart): boolean
 	local character = partOfCharacter(partThatTouched)
 	if not character then
@@ -121,21 +125,27 @@ function StandController:disconnectUpgradeButton(standAsset)
 end
 
 -- Place/Remove
-function StandController:placed(standAsset)
+function StandController:placed(standAsset, brainrotReferenceId: string)
 	updateProximityPromptText("Remove", standAsset)
+
+	local brainrotDisplayName = brainrotHandler.GetBrainrotDisplayName(brainrotReferenceId)
+	updateProximityPromptObjectText(brainrotDisplayName, standAsset)
+
 	self:connectCashCollect(standAsset)
 	self:connectUpgradeButton(standAsset)
 end
 
 function StandController:removed(standAsset)
 	updateProximityPromptText("Place", standAsset)
+	updateProximityPromptObjectText("Empty", standAsset)
+
 	self:disconnectCashCollect(standAsset)
 	self:disconnectUpgradeButton(standAsset)
 end
 
 function StandController:listenToService()
-	self.StandService.BrainrotPlaced:Connect(function(standAsset)
-		self:placed(standAsset)
+	self.StandService.BrainrotPlaced:Connect(function(standAsset, brainrotReferenceId: string)
+		self:placed(standAsset, brainrotReferenceId)
 	end)
 
 	self.StandService.BrainrotRemoved:Connect(function(standAsset)
@@ -143,11 +153,33 @@ function StandController:listenToService()
 	end)
 end
 
+-- Public Methods
+function StandController:ToggleProximityPromptVisibility(toggle: boolean)
+	assert(typeof(toggle) == "boolean", "toggle arg must be a boolean")
+	local plotAsset = self.PlotController:GetPlotAsset()
+	for _, stand in pairs(plotAsset:WaitForChild("Stands"):GetChildren()) do
+		local proximityPrompt = stand:WaitForChild("ProximityPrompt"):WaitForChild("ProximityPrompt") :: ProximityPrompt
+		local equippedTool = Player.Character and Player.Character:FindFirstChildOfClass("Tool")
+		if equippedTool and proximityPrompt.ActionText == "Remove" then
+			proximityPrompt.ActionText = "Replace"
+		elseif not equippedTool and proximityPrompt.ActionText == "Replace" then
+			proximityPrompt.ActionText = "Remove"
+		end
+
+		if toggle == false and (proximityPrompt.ActionText == "Remove" or proximityPrompt.ActionText == "Replace") then
+			proximityPrompt.Enabled = true
+		else
+			proximityPrompt.Enabled = toggle
+		end
+	end
+end
+
 -- LifeCycle
 function StandController:KnitInit()
 	self.StandService = knit.GetService("StandService")
 	self.DataController = knit.GetController("DataController")
 	self.ButtonsController = knit.GetController("ButtonsController")
+	self.PlotController = knit.GetController("PlotController")
 end
 
 function StandController:KnitStart()

@@ -129,7 +129,7 @@ end
 
 function CarryService:canCarryMore(player: Player)
 	assert(isPlayer(player), "player arg must be a Player Instance")
-	return self.DataService:GetValue(player, "MaxHold") > self:getProfile(player).Amount
+	return self.DataService:GetValue(player, "MaxHold").Value > self:getProfile(player).Amount
 end
 
 function CarryService:getLatestBrainrotAssetProfile(player: Player)

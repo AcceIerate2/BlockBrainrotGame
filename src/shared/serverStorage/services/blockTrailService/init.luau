@@ -31,7 +31,9 @@ end
 function BlockTrailService:RefundBlocks(player: Player)
 	assert(isPlayer(player), "player arg must be a Player Instance")
 	local blocksValueObject = self.DataService:GetValueObject(player, "Blocks")
-	blocksValueObject:Set(blocksValueObject:Get() + (self.PlayerBlocks[player] or 0))
+	blocksValueObject:Update(function(_table)
+		_table.Value += (self.PlayerBlocks[player] or 0)
+	end)
 	self:ClearBlocks(player)
 end
 
@@ -40,14 +42,16 @@ function BlockTrailService:ValidatePlace(player: Player, blockCFrame: CFrame)
 	assert(typeof(blockCFrame) == "CFrame", "blockCFrame arg must be a CFrame")
 
 	local blocksValueObject = self.DataService:GetValueObject(player, "Blocks")
-	if blocksValueObject:Get() < 1 then
+	if blocksValueObject:Get().Value < 1 then
 		return {
 			Status = false,
 			Reason = "NotEnoughBlocks",
 		}
 	end
 
-	blocksValueObject:Set(blocksValueObject:Get() - 1)
+	blocksValueObject:Update(function(_table)
+		_table.Value = _table.Value - 1
+	end)
 	if typeof(self.PlayerBlocks[player]) ~= "number" then
 		self.PlayerBlocks[player] = 0
 	end

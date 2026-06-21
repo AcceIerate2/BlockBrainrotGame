@@ -8,6 +8,10 @@ local TypeCheck = require(ReplicatedStorage.src.utility.TypeCheck)
 local functions = {
 	UpgradeBrainrot = require(script.upgradeBrainrotAction),
 	DropBrainrot = require(script.dropBrainrotAction),
+	Upgrade = require(script.upgradeAction),
+	ToggleBlock = require(script.toggleBlockAction),
+	SellBrainrot = require(script.sellBrainrotAction),
+	SellAllBrainrots = require(script.sellAllBrainrotsAction),
 }
 
 return function(button)

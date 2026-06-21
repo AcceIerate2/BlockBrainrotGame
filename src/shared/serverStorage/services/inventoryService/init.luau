@@ -69,6 +69,20 @@ function InventoryService:GetQuantity(player: Player, toolName: string): number
 	return uses
 end
 
+function InventoryService:RemoveTool(player: Player, toolReferenceId: string)
+	assert(typeof(player) == "Instance" and player:IsA("Player"), "player arg must be a Player Instance")
+	assert(typeof(toolReferenceId) == "string", "toolReferenceId arg must be a string")
+	self.Utility:DestroyTool(player, toolReferenceId)
+end
+
+function InventoryService:GiveTool(player: Player, toolReferenceId: string, handler: string)
+	assert(typeof(player) == "Instance" and player:IsA("Player"), "player arg must be a Player Instance")
+	assert(typeof(toolReferenceId) == "string", "toolReferenceId arg must be a string")
+	local tool = self.Utility:CreateTool(toolReferenceId, handler) :: Tool
+	tool.Name = toolReferenceId
+	tool.Parent = player.Backpack
+end
+
 function InventoryService:Remove(player: Player, toolName: string)
 	local inventoryValueObject = self:GetPlayerInventoryValueObject(player)
 	local toolData = inventoryValueObject:Get()[toolName]
@@ -175,7 +189,5 @@ end
 function InventoryService:KnitInit()
 	self.DataService = knit.GetService("DataService")
 end
-
-function InventoryService:KnitStart() end
 
 return InventoryService

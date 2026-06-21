@@ -14,13 +14,36 @@ local mutationConfig = require(ReplicatedStorage.src.GameConfiguration.General.m
 -- Constants
 local BrainrotAssets = ReplicatedStorage.Assets.Brainrots
 
+-- Helper Functions
+local function isPlayer(player: Player)
+	return typeof(player) == "Instance" and player:IsA("Player")
+end
+
 -->
 local BrainrotService = knit.CreateService({
 	Name = "BrainrotService",
 })
 
--- Private Methods
+-- Client Exposed Methods
+function BrainrotService.Client:SellBrainrot(player: Player, brainrotReferenceId: string)
+	return self.Server:SellBrainrot(player, brainrotReferenceId)
+end
+
+function BrainrotService.Client:SellBrainrots(player: Player, brainrotReferenceIds: { string })
+	return self.Server:SellBrainrots(player, brainrotReferenceIds)
+end
+
 -- Public Methods
+function BrainrotService:SellBrainrot(player: Player, brainrotReferenceId: string)
+	assert(isPlayer(player), "player arg must be a Player Instance")
+	assert(typeof(brainrotReferenceId) == "string", "brainrotReferenceId arg must be a string")
+end
+
+function BrainrotService:SellBrainrots(player: Player, brainrotReferenceIds: { string })
+	assert(isPlayer(player), "player arg must be a Player Instance")
+	assert(typeof(brainrotReferenceIds) == "table", "brainrotReferenceIds arg must be a table")
+end
+
 function BrainrotService:GetBrainrotAsset(brainrotName: string, mutation: string, shouldClone: boolean)
 	assert(typeof(brainrotName) == "string", "brainrotName arg must be a string")
 	assert(typeof(mutation) == "string", "mutation arg must be a string")

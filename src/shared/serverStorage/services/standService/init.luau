@@ -58,6 +58,7 @@ function StandService:placeBrainrot(standProfile: StandProfile, brainrotReferenc
 	standProfile.Brainrot = self.BrainrotService:GetBrainrotAsset(brainrotReferenceId, mutation, true)
 	standProfile.Taken = true
 
+	standProfile.Brainrot.Name = brainrotReferenceId
 	standProfile.Brainrot:PivotTo(standProfile.Asset.Placeholder:GetPivot())
 	standProfile.Brainrot.Parent = standProfile.Asset.Brainrot
 
@@ -73,7 +74,7 @@ function StandService:placeBrainrot(standProfile: StandProfile, brainrotReferenc
 		standProfile.Cash += 1
 	end)
 
-	self.Client.BrainrotPlaced:Fire(standProfile.Owner, standProfile.Asset)
+	self.Client.BrainrotPlaced:Fire(standProfile.Owner, standProfile.Asset, brainrotReferenceId)
 end
 
 function StandService:removeBrainrot(standProfile: StandProfile)
@@ -131,17 +132,27 @@ function StandService:ConnectStand(player: Player, standAsset: any)
 				return
 			end
 
+			local tool = self.InventoryService:GetPlayerEquippedTool(player)
+			local brainrotReferenceId = tool and tool.Name
+
 			if profileReference.Taken then
+				if typeof(profileReference.Brainrot) == "Instance" then
+					self.InventoryService:GiveTool(player, profileReference.Brainrot.Name, "BrainrotTool")
+				end
 				self:removeBrainrot(profileReference)
+
+				if tool then
+					self:placeBrainrot(profileReference, brainrotReferenceId)
+					self.InventoryService:RemoveTool(player, brainrotReferenceId)
+				end
 			else
-				local tool = self.InventoryService:GetPlayerEquippedTool(player)
 				if
 					typeof(tool) == "Instance"
 					and tool:IsA("Tool")
 					and tool:GetAttribute("Handler") == "BrainrotTool"
 				then
-					local brainrotReferenceId = tool.Name
 					self:placeBrainrot(profileReference, brainrotReferenceId)
+					self.InventoryService:RemoveTool(player, brainrotReferenceId)
 				end
 			end
 		end)

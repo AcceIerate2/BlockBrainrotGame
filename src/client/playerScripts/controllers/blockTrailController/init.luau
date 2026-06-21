@@ -249,9 +249,9 @@ function BlockTrailController:KnitStart()
 		self.WaitForEnoughBlocks = remainingBlocks < 1 or false
 	end
 
-	update(self.DataController:GetValue("Blocks"))
-	self.DataController:GetValueChangedSignal("Blocks"):Connect(function(remainingBlocks: number)
-		update(remainingBlocks)
+	update(self.DataController:GetValue("Blocks").Value)
+	self.DataController:GetValueChangedSignal("Blocks"):Connect(function(data: { Value: number, Level: number })
+		update(data.Value)
 	end)
 end
 

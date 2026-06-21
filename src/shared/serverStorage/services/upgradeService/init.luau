@@ -5,57 +5,105 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local knit = require(ReplicatedStorage.src.Packages.knit)
 
 -- Utility Modules
-local brainrotHandler = require(ReplicatedStorage.src.utility.brainrotHandler)
+local NumberShortner = require(ReplicatedStorage.src.utility.NumberShortner)
+
+-- Config Modules
+local upgradeConfig = require(ReplicatedStorage.src.GameConfiguration.General.upgradeConfig)
 
 -- Helper Functions
-local function isPlayer(player: Player)
+local function isPlayer(player: Player): boolean
 	return typeof(player) == "Instance" and player:IsA("Player")
 end
 
 -->
 local UpgradeService = knit.CreateService({
 	Name = "UpgradeService",
-	Client = {},
 })
 
 -- Client Exposed Methods
-function UpgradeService.Client:Upgrade(player: Player, brainrotReferenceId: string)
-	return self.Server:Upgrade(player, brainrotReferenceId)
+function UpgradeService.Client:Upgrade(player: Player, upgradeType: string, upgradeAmount: number)
+	return self.Server:Upgrade(player, upgradeType, upgradeAmount)
+end
+
+-- Private Methods
+function UpgradeService:isValidUpgradeType(upgradeType: string)
+	return typeof(upgradeConfig.Upgrades[upgradeType]) == "table"
+end
+
+function UpgradeService:isValidUpgradeAmount(upgradeType: string, upgradeAmount: number)
+	return upgradeConfig.Upgrades[upgradeType].Limits[upgradeAmount] == true
+end
+
+function UpgradeService:reachedMaxLevel(upgradeType: string, level: number)
+	if upgradeConfig.Upgrades[upgradeType].MaxLevel <= -1 then
+		return false
+	end
+	return level >= upgradeConfig.Upgrades[upgradeType].MaxLevel
+end
+
+function UpgradeService:getUpgradeCost(upgradeType: string, level: number)
+	assert(typeof(upgradeType) == "string", "upgradeType arg must be a string")
+	assert(typeof(level) == "number", "level arg must be a number")
+	local upgradeData = upgradeConfig.Upgrades[upgradeType]
+	return upgradeData.BaseCost * upgradeData.Multiplier ^ level
 end
 
 -- Public Methods
-function UpgradeService:Upgrade(player: Player, brainrotReferenceId: string)
+function UpgradeService:Upgrade(player: Player, upgradeType: string, upgradeAmount: number)
 	assert(isPlayer(player), "player arg must be a Player Instance")
-	assert(typeof(brainrotReferenceId) == "string", "brainrotReferenceId arg must be a string")
+	assert(typeof(upgradeType) == "string", "upgradeType arg must be a string")
+	assert(typeof(upgradeAmount) == "number", "upgradeAmount arg must be a number")
 
-	local inventoryValueObject = self.DataService:GetValueObject(player, "Inventory")
-	if not inventoryValueObject:Get()[brainrotReferenceId] then
+	if not self:isValidUpgradeType(upgradeType) then
 		return {
 			Status = false,
-			Reason = `You don't own {brainrotHandler.GetBrainrotDisplayName(brainrotReferenceId)}!`,
+			Reason = "Invalid Upgrade",
 		}
 	end
 
-	local currentLevel = inventoryValueObject:Get()[brainrotReferenceId].Level
+	if not self:isValidUpgradeAmount(upgradeType, upgradeAmount) then
+		return {
+			Status = false,
+			Reason = "Invalid Upgrade Amount",
+		}
+	end
 
-	local costToUpgrade = brainrotHandler.CalculateLevelCost(brainrotReferenceId, currentLevel + 1)
+	local valueObject = self.DataService:GetValueObject(player, upgradeType == "Carry" and "MaxHold" or upgradeType)
+	if upgradeType == "Blocks" then
+		if valueObject:Get().Value + upgradeAmount > self.DataService:GetValue(player, "MaxBlocks").Value then
+			return {
+				Status = false,
+				Reason = "You've reached your limit! Upgrade Max Blocks to buy more!",
+			}
+		end
+	end
+
+	if self:reachedMaxLevel(upgradeType, valueObject:Get().Level + upgradeAmount) then
+		return {
+			Status = false,
+			Reason = "Max Level",
+		}
+	end
+
+	local costToUpgrade = self:getUpgradeCost(upgradeType, valueObject:Get().Level + upgradeAmount)
 	if not self.CashService:canAfford(player, costToUpgrade) then
 		return {
 			Status = false,
-			Reason = "You can't afford this!",
+			Reason = `You need ${NumberShortner(costToUpgrade - self.DataService:GetValue(player, "Cash"))} more!`,
 		}
 	end
 
 	self.CashService:manipulatePlayerCash(player, -costToUpgrade, "Addition")
-	inventoryValueObject:Update(function(_table)
-		_table[brainrotReferenceId].Level += 1
+	valueObject:Update(function(_table)
+		_table.Value += upgradeAmount
+		_table.Level += upgradeAmount
 	end)
 
 	return {
 		Status = true,
-		NewLevel = currentLevel + 1,
-		NextLevel = currentLevel + 2,
-		CostToUpgrade = brainrotHandler.CalculateLevelCost(brainrotReferenceId, currentLevel + 2),
+		NewLevel = valueObject:Get().Level,
+		NewValue = valueObject:Get().Value,
+		CostToUpgrade = self:getUpgradeCost(upgradeType, valueObject:Get().Level + upgradeAmount),
 	}
 end
 

@@ -56,7 +56,13 @@ function BrainrotHandler.GetBrainrotRarity(brainrotReferenceId: string): string
 	return "Common"
 end
 
-function BrainrotHandler.GetBrainrotIncomeRate(brainrotReferenceId: string)
+function BrainrotHandler.GetBrainrotIncomeRate(brainrotReferenceId: string, level: number?, player: Player)
+	assert(typeof(brainrotReferenceId) == "string", "brainrotReferenceId arg must be a string")
+	local _level = level or BrainrotHandler.GetLevelFromBrainrotReferenceId(brainrotReferenceId, player)
+	return BrainrotHandler.GetBrainrotBaseIncomeRate(brainrotReferenceId) * 1.1 ^ _level
+end
+
+function BrainrotHandler.GetBrainrotBaseIncomeRate(brainrotReferenceId: string)
 	assert(typeof(brainrotReferenceId) == "string", "brainrotReferenceId arg must be a string")
 	local brainrotName = BrainrotHandler.GetBrainrotNameFromReferenceId(brainrotReferenceId)
 	local rarity = BrainrotHandler.GetBrainrotRarity(brainrotReferenceId)
@@ -65,7 +71,13 @@ end
 
 function BrainrotHandler.GetBrainrotBaseCost(brainrotReferenceId: string)
 	assert(typeof(brainrotReferenceId) == "string", "brainrotReferenceId arg must be a string")
-	return BrainrotHandler.GetBrainrotIncomeRate(brainrotReferenceId) * 10
+	return BrainrotHandler.GetBrainrotBaseIncomeRate(brainrotReferenceId) * 10
+end
+
+function BrainrotHandler.GetBrainrotCost(brainrotReferenceId: string, level: number?, player: Player?)
+	assert(typeof(brainrotReferenceId) == "string", "brainrotReferenceId arg must be a string")
+	local _level = level or BrainrotHandler.GetLevelFromBrainrotReferenceId(brainrotReferenceId, player)
+	return BrainrotHandler.GetBrainrotBaseCost(brainrotReferenceId) * (_level ^ 1.2)
 end
 
 function BrainrotHandler.CalculateLevelCost(brainrotReferenceId: string, level: number)
