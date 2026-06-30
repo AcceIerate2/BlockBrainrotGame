@@ -1,5 +1,6 @@
 -- Roblox Services
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local brainrotHandler = require(ReplicatedStorage.src.utility.brainrotHandler)
 
 -- Assets
 local tools = ReplicatedStorage.Assets.Tools
@@ -18,7 +19,9 @@ function Utility:CreateTool(itemName: string, handler: string, textureId: string
 	tool:SetAttribute("Handler", handler)
 
 	tool.Name = itemName
-	tool.TextureId = typeof(textureId) == "string" and textureId or tool.TextureId
+	tool.TextureId = typeof(textureId) == "string" and textureId
+		or handler == "BrainrotTool" and brainrotHandler.GetBrainrotIcon(itemName)
+		or tool.TextureId
 	return tool
 end
 

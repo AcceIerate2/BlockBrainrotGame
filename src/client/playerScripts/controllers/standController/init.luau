@@ -133,6 +133,8 @@ function StandController:placed(standAsset, brainrotReferenceId: string)
 
 	self:connectCashCollect(standAsset)
 	self:connectUpgradeButton(standAsset)
+
+	self.SellController.RefreshBrainrots:Fire()
 end
 
 function StandController:removed(standAsset)
@@ -141,6 +143,8 @@ function StandController:removed(standAsset)
 
 	self:disconnectCashCollect(standAsset)
 	self:disconnectUpgradeButton(standAsset)
+
+	self.SellController.RefreshBrainrots:Fire()
 end
 
 function StandController:listenToService()
@@ -180,6 +184,7 @@ function StandController:KnitInit()
 	self.DataController = knit.GetController("DataController")
 	self.ButtonsController = knit.GetController("ButtonsController")
 	self.PlotController = knit.GetController("PlotController")
+	self.SellController = knit.GetController("SellController")
 end
 
 function StandController:KnitStart()

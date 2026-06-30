@@ -5,6 +5,8 @@ local RunService = game:GetService("RunService")
 -- Packages
 local knit = require(ReplicatedStorage.src.Packages.knit)
 local promise = require(ReplicatedStorage.src.Packages.promise)
+
+-- Utility Modules
 local brainrotHandler = require(ReplicatedStorage.src.utility.brainrotHandler)
 
 -- Types

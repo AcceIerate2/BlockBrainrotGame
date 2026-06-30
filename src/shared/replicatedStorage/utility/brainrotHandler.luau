@@ -87,4 +87,18 @@ function BrainrotHandler.CalculateLevelCost(brainrotReferenceId: string, level: 
 	return baseCost * (level ^ 1.2)
 end
 
+function BrainrotHandler.GetBrainrotIcon(brainrotReferenceId: string)
+	assert(typeof(brainrotReferenceId) == "string", "brainrotReferenceId arg must be a string")
+	local brainrotName = BrainrotHandler.GetBrainrotNameFromReferenceId(brainrotReferenceId)
+	local rarity = BrainrotHandler.GetBrainrotRarity(brainrotReferenceId)
+	return brainrotConfig[rarity][brainrotName].Icon
+end
+
+function BrainrotHandler.GetBrainrotAnimations(brainrotReferenceId: string)
+	assert(typeof(brainrotReferenceId) == "string", "brainrotReferenceId arg must be a string")
+	local brainrotName = BrainrotHandler.GetBrainrotNameFromReferenceId(brainrotReferenceId)
+	local rarity = BrainrotHandler.GetBrainrotRarity(brainrotReferenceId)
+	return brainrotConfig[rarity][brainrotName].AnimationIds
+end
+
 return BrainrotHandler

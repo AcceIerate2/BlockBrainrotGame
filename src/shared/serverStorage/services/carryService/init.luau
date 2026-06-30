@@ -24,9 +24,9 @@ local function toggleMeshPart(meshPart: MeshPart, toggle: boolean)
 	assert(typeof(meshPart) == "Instance" and meshPart:IsA("MeshPart"), "meshPart arg must be a MeshPart")
 	assert(typeof(toggle) == "boolean", "toggle arg must be a boolean")
 	meshPart.Anchored = not toggle
-	meshPart.CanCollide = not toggle
-	meshPart.CanTouch = not toggle
-	meshPart.Massless = toggle
+	meshPart.CanCollide = false
+	meshPart.CanTouch = false
+	meshPart.Massless = true
 end
 
 local function getAttachments(character: any, meshPart: MeshPart, yOffset, amount: number): (Attachment, Attachment)
@@ -241,8 +241,9 @@ function CarryService:DropSpecific(player: Player, asset: any, shouldDrop: boole
 			asset:PivotTo(CFrame.new(raycast.Position))
 		else
 			local originalCFrame = asset:GetAttribute("OriginalCFrame")
-			asset:PivotTo(originalCFrame)
-			asset:FindFirstChildOfClass("MeshPart").CFrame = originalCFrame
+			if typeof(originalCFrame) == "CFrame" then
+				asset:PivotTo(originalCFrame)
+			end
 		end
 
 		self.BrainrotSpawnService:BrainrotDropped(asset)

@@ -7,7 +7,7 @@ local blocksConfig = require(ReplicatedStorage.src.GameConfiguration.General.blo
 -->
 return {
 	DataTemplate = {
-		Cash = 1000000,
+		Cash = 5000000,
 		Rebirths = 0,
 		Inventory = {
 			["67"] = {
