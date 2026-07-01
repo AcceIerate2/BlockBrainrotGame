@@ -41,6 +41,9 @@ function PlayerService:load(player: Player)
 	-- CarryService
 	playerDisconnectFunctions.carryServiceDisconnectFunction = self.CarryService:Connect(player)
 
+	-- IndexService
+	self.IndexService:Sync(player)
+
 	-- Gamepasses
 	self.MonetizationService:loadGamepasses(player)
 
@@ -53,10 +56,9 @@ function PlayerService:load(player: Player)
 			CollisionGroup = "PlayerCollisions",
 		}, {})
 
-		--[[local plot = self.PlotService:getPlayerPlot(player).Plot
-
+		local plot = self.PlotService:GetPlotStateFromPlayer(player).Asset
 		local offset = Vector3.new(0, Character:GetExtentsSize().Y / 2, 0)
-		Character:PivotTo(plot.Spawn:GetPivot() + offset)]]
+		Character:PivotTo(plot.Spawn:GetPivot() + offset)
 	end
 
 	if player.Character then
@@ -97,6 +99,7 @@ function PlayerService:KnitInit()
 	self.PlotService = knit.GetService("PlotService")
 	self.BlockTrailService = knit.GetService("BlockTrailService")
 	self.CarryService = knit.GetService("CarryService")
+	self.IndexService = knit.GetService("IndexService")
 
 	-- Player Connections
 	Players.PlayerAdded:Connect(function(player: Player)

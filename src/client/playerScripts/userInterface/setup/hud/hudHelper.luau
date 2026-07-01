@@ -20,6 +20,8 @@ function Hud:Init(player: Player)
 	self.HudController.Signals.ToggleDropButtonVisibility:Connect(function(toggle: boolean)
 		self:ToggleDropButtonVisibility(toggle)
 	end)
+
+	self:ToggleDropButtonVisibility(false)
 end
 
 return Hud

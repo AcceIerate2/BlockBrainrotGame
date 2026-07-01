@@ -32,6 +32,25 @@ function InventoryService.Client:getInventory(player: Player)
 end
 
 -- Server Only Methods
+function InventoryService:EquipTool(player: Player, referenceId: string)
+	assert(typeof(player) == "Instance" and player:IsA("Player"), "player arg must be a Player Instance")
+	assert(typeof(referenceId) == "string", "referenceId arg must be a string")
+	if self.Utility.ToolExistsInPlayerOrCharacter(player, referenceId) then
+		return
+	end
+
+	local tool = player.Backpack:FindFirstChild(referenceId)
+	if tool then
+		local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+		if humanoid then
+			humanoid:UnequipTools()
+			humanoid:EquipTool(tool)
+		end
+	else
+		warn(`Could not find tool named: [{referenceId}]`)
+	end
+end
+
 function InventoryService:GetPlayerEquippedTool(player: Player): Tool?
 	assert(typeof(player) == "Instance" and player:IsA("Player"), "player arg must be a Player Instance")
 	local character = player.Character
@@ -134,6 +153,10 @@ function InventoryService:Give(player: Player, toolName: string, handler: string
 	self.Client.toolAdded:Fire(player, dataToInsert)
 	self.InventoryChanged:Fire(player, inventoryValueObject:Get())
 
+	if handler == "BrainrotTool" then
+		self.IndexService:AddBrainrot(player, toolName, typeof(customData) == "table" and customData.Mutation)
+	end
+
 	if self.Utility:ToolExistsInPlayerOrCharacter(player, toolName) then
 		return
 	end
@@ -155,6 +178,12 @@ function InventoryService:LoadTools(player: Player)
 			Quantity: number,
 			Handler: string,
 		} in pairs(playerInventory) do
+			if
+				data.Handler == "BrainrotTool" and self.StandService:GetStandFromBrainrotReferenceId(player, toolName)
+			then
+				continue
+			end
+
 			local tool = self.Utility:CreateTool(toolName, data.Handler)
 			tool.Parent = player.Backpack
 		end
@@ -186,8 +215,11 @@ function InventoryService:Disconnect(player: Player)
 	self.Connections[player] = nil
 end
 
+-- LifeCycle
 function InventoryService:KnitInit()
 	self.DataService = knit.GetService("DataService")
+	self.IndexService = knit.GetService("IndexService")
+	self.StandService = knit.GetService("StandService")
 end
 
 return InventoryService

@@ -17,6 +17,10 @@ function PlotController:syncPlot()
 end
 
 -- Public Methods
+function PlotController:GetSpawn()
+	return self.PlotAsset:WaitForChild("Spawn")
+end
+
 function PlotController:GetPlotAsset()
 	return self.PlotAsset
 end

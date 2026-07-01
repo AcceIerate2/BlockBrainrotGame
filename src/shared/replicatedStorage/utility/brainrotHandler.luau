@@ -91,7 +91,7 @@ function BrainrotHandler.GetBrainrotIcon(brainrotReferenceId: string)
 	assert(typeof(brainrotReferenceId) == "string", "brainrotReferenceId arg must be a string")
 	local brainrotName = BrainrotHandler.GetBrainrotNameFromReferenceId(brainrotReferenceId)
 	local rarity = BrainrotHandler.GetBrainrotRarity(brainrotReferenceId)
-	return brainrotConfig[rarity][brainrotName].Icon
+	return brainrotConfig[rarity][brainrotName] and brainrotConfig[rarity][brainrotName].Icon
 end
 
 function BrainrotHandler.GetBrainrotAnimations(brainrotReferenceId: string)

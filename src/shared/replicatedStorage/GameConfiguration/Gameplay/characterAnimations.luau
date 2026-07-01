@@ -22,4 +22,12 @@ CharacterAnimations.Swing = {
 	methodsToCallOnLoad = {},
 }
 
+CharacterAnimations.FrontHold = {
+	id = "rbxassetid://85694722550575",
+	props = {
+		Looped = true,
+	},
+	methodsToCallOnLoad = {},
+}
+
 return CharacterAnimations

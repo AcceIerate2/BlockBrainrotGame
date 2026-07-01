@@ -94,6 +94,24 @@ function StandService:removeBrainrot(standProfile: StandProfile)
 end
 
 -- Public Methods
+function StandService:GetStandFromBrainrotReferenceId(player: Player, brainrotReferenceId: string)
+	assert(isPlayer(player), "player arg must be a Player Instance")
+	assert(typeof(brainrotReferenceId) == "string", "brainrotReferenceId arg must be a string")
+
+	for standAsset, standProfile: StandProfile in pairs(self.Profiles) do
+		if
+			standProfile.Owner == player
+			and standProfile.Taken
+			and typeof(standProfile.Brainrot) == "Instance"
+			and standProfile.Brainrot.Name == brainrotReferenceId
+		then
+			return standAsset
+		end
+	end
+
+	return nil
+end
+
 function StandService:CollectCash(player: Player, standAsset)
 	local profileReference = self:getProfileReference(standAsset) :: StandProfile
 	if profileReference.Owner ~= player then

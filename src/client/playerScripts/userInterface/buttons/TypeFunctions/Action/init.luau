@@ -12,6 +12,9 @@ local functions = {
 	ToggleBlock = require(script.toggleBlockAction),
 	SellBrainrot = require(script.sellBrainrotAction),
 	SellAllBrainrots = require(script.sellAllBrainrotsAction),
+	Teleport = require(script.teleportAction),
+	InviteFriends = require(script.inviteFriendsAction),
+	Rebirth = require(script.rebirthAction),
 }
 
 return function(button)

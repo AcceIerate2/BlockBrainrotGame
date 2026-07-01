@@ -1,0 +1,2 @@
+local Legendary = {}
+return Legendary

@@ -15,7 +15,8 @@ function BlocksLabel:Init(player: Player)
 	self.DataController = knit.GetController("DataController")
 
 	self.Player = player
-	self.Label = self.Player.PlayerGui:WaitForChild("Hud"):WaitForChild("Blocks")
+	self.Label =
+		self.Player.PlayerGui:WaitForChild("Hud"):WaitForChild("Labels"):WaitForChild("Blocks"):WaitForChild("Label")
 
 	self:update(self.DataController:GetValue("Blocks").Value, self.DataController:GetValue("MaxBlocks").Value)
 	self.DataController:GetValueChangedSignal("Blocks"):Connect(function(newValue)

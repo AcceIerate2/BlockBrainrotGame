@@ -66,6 +66,14 @@ function BrainrotService:SellBrainrot(player: Player, brainrotReferenceId: strin
 		}
 	end
 
+	local stand = self.StandService:GetStandFromBrainrotReferenceId(player, brainrotReferenceId)
+	if stand then
+		return {
+			Status = false,
+			Reason = `Remove {brainrotHandler.GetBrainrotDisplayName(brainrotReferenceId)} from its stand to sell!`,
+		}
+	end
+
 	local level = brainrotData.Level
 	local cost = brainrotHandler.GetBrainrotCost(brainrotReferenceId, level)
 
@@ -178,6 +186,7 @@ function BrainrotService:KnitInit()
 	self.InventoryService = knit.GetService("InventoryService")
 	self.DataService = knit.GetService("DataService")
 	self.CashService = knit.GetService("CashService")
+	self.StandService = knit.GetService("StandService")
 
 	for _, mutationFolder in pairs(BrainrotAssets:GetChildren()) do
 		for _, brainrot in pairs(mutationFolder:GetChildren()) do
