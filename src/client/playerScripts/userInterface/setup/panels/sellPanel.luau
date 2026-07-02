@@ -16,18 +16,23 @@ local SellPanel = {
 
 function SellPanel:removeCard(brainrotReferenceId: string)
 	assert(typeof(brainrotReferenceId) == "string", "brainrotReferenceId arg must be a string")
-	for _, card in pairs(self.Cards) do
+	for card, _ in pairs(self.Cards) do
 		if card and card.Name == brainrotReferenceId then
+			self.Cards[card] = nil
 			self.ButtonsController:unlink(card:WaitForChild("Buttons"):WaitForChild("Toggle"))
-			task.defer(card.Destroy, card)
+			card:Destroy()
 		end
 	end
 end
 
 function SellPanel:clearCards()
-	for _, card in pairs(self.Cards) do
-		self.ButtonsController:unlink(card:WaitForChild("Buttons"):WaitForChild("Toggle"))
-		task.defer(card.Destroy, card)
+	for card, _ in pairs(self.Cards) do
+		local buttons = card:FindFirstChild("Buttons")
+		local toggle = buttons and buttons:FindFirstChild("Toggle")
+		if toggle then
+			self.ButtonsController:unlink(toggle)
+		end
+		card:Destroy()
 	end
 	table.clear(self.Cards)
 end
@@ -66,7 +71,7 @@ function SellPanel:newCard(brainrotReferenceId: string)
 	newCard.Visible = true
 	newCard.Parent = self.Container
 
-	table.insert(self.Cards, newCard)
+	self.Cards[newCard] = true
 end
 
 function SellPanel:refreshBrainrots()

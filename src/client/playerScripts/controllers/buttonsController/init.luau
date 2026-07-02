@@ -4,6 +4,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 -- Packages
 local Signal = require(ReplicatedStorage.src.Packages.Signal)
 local knit = require(ReplicatedStorage.src.Packages.knit)
+local promise = require(ReplicatedStorage.src.Packages.promise)
 
 -->
 local ButtonsController = knit.CreateController({
