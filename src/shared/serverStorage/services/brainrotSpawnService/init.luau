@@ -7,6 +7,7 @@ local knit = require(ReplicatedStorage.src.Packages.knit)
 
 -- Utility Modules
 local InstanceCreator = require(ReplicatedStorage.src.utility.InstanceCreator)
+local brainrotHandler = require(ReplicatedStorage.src.utility.brainrotHandler)
 
 -- Constants
 local BrainrotSpawns = workspace.src.BrainrotSpawns
@@ -131,6 +132,7 @@ end
 function BrainrotSpawnService:BrainrotDropped(brainrotAsset)
 	local profile = self:getBrainrotProfile(brainrotAsset)
 	profile.State = "Idle"
+	brainrotHandler.ToggleCountdownState(brainrotAsset, true)
 end
 
 function BrainrotSpawnService:SpawnBrainrot(brainrotSpawn, replace: boolean)
@@ -139,12 +141,15 @@ function BrainrotSpawnService:SpawnBrainrot(brainrotSpawn, replace: boolean)
 	local mutation = self.BrainrotService:RngMutation()
 
 	local zoneProfile = self:getZoneProfile(brainrotSpawn) :: ZoneProfile
-	local brainrotAsset = self.BrainrotService:GetBrainrotAsset(brainrotName, mutation, true)
+	local brainrotAsset = brainrotHandler.GetBrainrotAsset(brainrotName, mutation, true)
 
 	local cFrame = self:getCFrame(brainrotSpawn.Base, brainrotAsset, zoneProfile.CFrames)
 	table.insert(zoneProfile.CFrames, cFrame)
+
 	brainrotAsset:PivotTo(cFrame)
 	brainrotAsset:SetAttribute("OriginalCFrame", cFrame)
+	brainrotAsset:SetAttribute("Mutation", mutation)
+	brainrotAsset:SetAttribute("DefaultScale", brainrotAsset:GetScale())
 
 	local proximityPrompt = InstanceCreator("ProximityPrompt", "ProximityPrompt", brainrotAsset.PrimaryPart, {
 		ActionText = "Pick Up",
@@ -168,6 +173,8 @@ function BrainrotSpawnService:SpawnBrainrot(brainrotSpawn, replace: boolean)
 			end
 
 			profileReference.State = "Carrying"
+			proximityPrompt.Enabled = false
+			brainrotHandler.ToggleCountdownState(brainrotAsset, false)
 			self.CarryService:Carry(playerWhoTriggered, brainrotAsset)
 		end)
 	)
@@ -184,6 +191,8 @@ function BrainrotSpawnService:SpawnBrainrot(brainrotSpawn, replace: boolean)
 			if profileReference.State ~= "Idle" then
 				return
 			end
+
+			proximityPrompt.Enabled = true
 
 			elapsed = 0
 			profileReference.SecondsLeft -= 1

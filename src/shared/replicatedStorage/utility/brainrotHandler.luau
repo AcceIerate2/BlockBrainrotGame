@@ -3,8 +3,41 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
 -- Packages
-local brainrotConfig = require(ReplicatedStorage.src.GameConfiguration.General.brainrotConfig)
 local knit = require(ReplicatedStorage.src.Packages.knit)
+
+-- Utility Modules
+local NumberShortner = require(ReplicatedStorage.src.utility.NumberShortner)
+local InstanceCreator = require(ReplicatedStorage.src.utility.InstanceCreator)
+
+-- Config Modules
+local brainrotConfig = require(ReplicatedStorage.src.GameConfiguration.General.brainrotConfig)
+local mutationConfig = require(ReplicatedStorage.src.GameConfiguration.General.mutationConfig)
+local rarityColors = require(ReplicatedStorage.src.GameConfiguration.General.rarityColors)
+
+-- Constants
+local BrainrotUiHeader = ReplicatedStorage.Assets.UI.BrainrotHeader
+local BrainrotAssets = ReplicatedStorage.Assets.Brainrots
+
+-- Helper Functions
+local function getBrainrotScaleMultiplier(level: number): number
+	level = math.max(level, 1)
+
+	local maxLevel = 100
+	local maxScale = 2.5
+	local firstUpgradeScale = 1.25
+
+	if level >= maxLevel then
+		return maxScale
+	end
+
+	local progress = (level - 1) / (maxLevel - 1)
+	local firstProgress = 1 / (maxLevel - 1)
+
+	local exponent = math.log((firstUpgradeScale - 1) / (maxScale - 1)) / math.log(firstProgress)
+
+	local multiplier = 1 + ((maxScale - 1) * (progress ^ exponent))
+	return multiplier
+end
 
 -->
 local BrainrotHandler = {}
@@ -56,10 +89,13 @@ function BrainrotHandler.GetBrainrotRarity(brainrotReferenceId: string): string
 	return "Common"
 end
 
-function BrainrotHandler.GetBrainrotIncomeRate(brainrotReferenceId: string, level: number?, player: Player)
+function BrainrotHandler.GetBrainrotIncomeRate(brainrotReferenceId: string, level: number?, player: Player?)
 	assert(typeof(brainrotReferenceId) == "string", "brainrotReferenceId arg must be a string")
 	local _level = level or BrainrotHandler.GetLevelFromBrainrotReferenceId(brainrotReferenceId, player)
-	return BrainrotHandler.GetBrainrotBaseIncomeRate(brainrotReferenceId) * 1.1 ^ _level
+	local mutation = BrainrotHandler.GetMutationFromBrainrotReferenceId(brainrotReferenceId, player) or "Default"
+	local baseIncomeRate = BrainrotHandler.GetBrainrotBaseIncomeRate(brainrotReferenceId)
+		* mutationConfig[mutation].Multiplier
+	return baseIncomeRate * (1.1 ^ (_level - 1))
 end
 
 function BrainrotHandler.GetBrainrotBaseIncomeRate(brainrotReferenceId: string)
@@ -99,6 +135,87 @@ function BrainrotHandler.GetBrainrotAnimations(brainrotReferenceId: string)
 	local brainrotName = BrainrotHandler.GetBrainrotNameFromReferenceId(brainrotReferenceId)
 	local rarity = BrainrotHandler.GetBrainrotRarity(brainrotReferenceId)
 	return brainrotConfig[rarity][brainrotName].AnimationIds
+end
+
+function BrainrotHandler.ToggleCountdownState(brainrotAsset: any, enabled: boolean)
+	local ui = brainrotAsset:FindFirstChildOfClass("MeshPart"):FindFirstChildOfClass("BillboardGui")
+	ui.Labels.Content.Countdown.Visible = enabled
+	ui.Labels.Content.Level.Visible = not enabled
+end
+
+function BrainrotHandler.UpdateLevel(
+	brainrotAsset: any,
+	brainrotReferenceId: string,
+	newLevel: number?,
+	player: Player?
+)
+	local ui = brainrotAsset:FindFirstChildOfClass("MeshPart"):FindFirstChildOfClass("BillboardGui")
+
+	local level = newLevel or BrainrotHandler.GetLevelFromBrainrotReferenceId(brainrotReferenceId)
+	ui.Labels.Content.Level.Text = `Level {level}`
+	ui.Labels.Content.Income.Text =
+		`${NumberShortner(BrainrotHandler.GetBrainrotIncomeRate(brainrotReferenceId, level, player))}/s`
+
+	local defaultScale = brainrotAsset:GetAttribute("DefaultScale")
+	local scaleMultiplier = getBrainrotScaleMultiplier(level)
+	brainrotAsset:ScaleTo(defaultScale * scaleMultiplier)
+end
+
+function BrainrotHandler.AddUiHeader(brainrotAsset: any, mutation: string)
+	local ui = BrainrotUiHeader:Clone()
+	ui.Labels.Content.Income.Text = `${NumberShortner(BrainrotHandler.GetBrainrotBaseIncomeRate(brainrotAsset.Name))}/s`
+	ui.Labels.Content.Level.Text = `Level 1`
+
+	local rarity = BrainrotHandler.GetBrainrotRarity(brainrotAsset.Name)
+	ui.Labels.Content.Rarity.Text = rarity
+	ui.Labels.Content.Rarity.TextColor3 = rarityColors[rarity]
+
+	ui.Labels.Content:FindFirstChild("Name").Text = BrainrotHandler.GetBrainrotDisplayName(brainrotAsset.Name)
+
+	ui.Labels.Content.Mutation.Visible = typeof(mutation) == "string" and mutation ~= "Default"
+	ui.Labels.Content.Mutation.Text = mutation
+	ui.Labels.Content.Mutation.TextColor3 = mutationConfig[mutation].Color
+
+	ui.StudsOffset = Vector3.new(0, brainrotAsset:GetExtentsSize().Y + 1, 0)
+	ui.Parent = brainrotAsset:FindFirstChildOfClass("MeshPart")
+
+	ui.Enabled = true
+end
+
+function BrainrotHandler.AnimateBrainrot(brainrotAsset: any)
+	local animationController = brainrotAsset and brainrotAsset:FindFirstChildOfClass("AnimationController")
+	local animator = animationController and animationController:FindFirstChildOfClass("Animator")
+	if not animator then
+		animator = InstanceCreator("Animator", "Animator", animationController)
+	end
+
+	local animationId = BrainrotHandler.GetBrainrotAnimations(brainrotAsset.Name).Idle
+	local animationInstance = InstanceCreator("Animation", "IdleAnimation", brainrotAsset, {
+		AnimationId = animationId,
+	})
+
+	local loadedAnimationTrack = animator:LoadAnimation(animationInstance)
+	animationInstance:Destroy()
+
+	loadedAnimationTrack:Play()
+end
+
+function BrainrotHandler.GetBrainrotAsset(brainrotName: string, mutation: string, shouldClone: boolean)
+	assert(typeof(brainrotName) == "string", "brainrotName arg must be a string")
+	assert(typeof(mutation) == "string", "mutation arg must be a string")
+
+	brainrotName = BrainrotHandler.GetBrainrotNameFromReferenceId(brainrotName)
+	mutation = typeof(mutation) == "string" and mutation or "Default"
+
+	local brainrotAsset = BrainrotAssets:FindFirstChild(mutation):FindFirstChild(brainrotName)
+	if shouldClone then
+		brainrotAsset = brainrotAsset:Clone()
+		brainrotAsset:SetAttribute("DefaultScale", brainrotAsset:GetScale())
+		BrainrotHandler.AnimateBrainrot(brainrotAsset)
+		BrainrotHandler.AddUiHeader(brainrotAsset, mutation)
+	end
+
+	return brainrotAsset
 end
 
 return BrainrotHandler

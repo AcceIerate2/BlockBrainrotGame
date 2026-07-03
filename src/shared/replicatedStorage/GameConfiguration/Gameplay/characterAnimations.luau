@@ -23,7 +23,7 @@ CharacterAnimations.Swing = {
 }
 
 CharacterAnimations.FrontHold = {
-	id = "rbxassetid://85694722550575",
+	id = "rbxassetid://126402104213578",
 	props = {
 		Looped = true,
 	},

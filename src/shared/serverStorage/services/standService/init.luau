@@ -15,6 +15,7 @@ type StandProfile = {
 	ProximityPrompt: ProximityPrompt,
 	Connections: { [string]: RBXScriptConnection },
 	Brainrot: any,
+	Mutation: string,
 	Taken: boolean,
 	Cash: number,
 	Owner: Player,
@@ -47,22 +48,29 @@ function StandService:getProfileReference(standAsset): StandProfile
 	return self.Profiles[standAsset]
 end
 
-function StandService:placeBrainrot(standProfile: StandProfile, brainrotReferenceId: string)
+function StandService:placeBrainrot(standProfile: StandProfile, brainrotReferenceId: string, save: boolean?)
 	assert(typeof(standProfile) == "table", "standProfile arg must be a table")
 	assert(typeof(brainrotReferenceId) == "string", "brainrotReferenceId arg must be a string")
 
 	if standProfile.Taken then
-		warn(`Stand is taken?`)
+		warn(`Stand is taken? - StandService:placeBrainrot - Line 56`)
 		return
 	end
 
 	local mutation = brainrotHandler.GetMutationFromBrainrotReferenceId(brainrotReferenceId, standProfile.Owner)
-	standProfile.Brainrot = self.BrainrotService:GetBrainrotAsset(brainrotReferenceId, mutation, true)
+	standProfile.Brainrot = brainrotHandler.GetBrainrotAsset(
+		brainrotHandler.GetBrainrotNameFromReferenceId(brainrotReferenceId),
+		mutation,
+		true
+	)
+
+	brainrotHandler.ToggleCountdownState(standProfile.Brainrot, false)
 	standProfile.Taken = true
 
 	standProfile.Brainrot.Name = brainrotReferenceId
 	standProfile.Brainrot:PivotTo(standProfile.Asset.Placeholder:GetPivot())
 	standProfile.Brainrot.Parent = standProfile.Asset.Brainrot
+	standProfile.Mutation = mutation
 
 	local elapsed = 0
 	standProfile.Connections.CashConnection = RunService.Heartbeat:Connect(function(deltaTime: number)
@@ -72,14 +80,25 @@ function StandService:placeBrainrot(standProfile: StandProfile, brainrotReferenc
 		end
 		elapsed = 0
 
-		standProfile.Asset.Cash.Value += 1
-		standProfile.Cash += 1
+		local incomeRate = brainrotHandler.GetBrainrotIncomeRate(
+			brainrotReferenceId,
+			brainrotHandler.GetLevelFromBrainrotReferenceId(brainrotReferenceId, standProfile.Owner),
+			standProfile.Owner
+		)
+
+		standProfile.Asset.Cash.Value += incomeRate
+		standProfile.Cash += incomeRate
 	end)
 
 	self.Client.BrainrotPlaced:Fire(standProfile.Owner, standProfile.Asset, brainrotReferenceId)
+	if save then
+		self.DataService:GetValueObject(standProfile.Owner, "TakenStands"):Update(function(_table)
+			_table[standProfile.Asset:GetAttribute("Index")] = brainrotReferenceId
+		end)
+	end
 end
 
-function StandService:removeBrainrot(standProfile: StandProfile)
+function StandService:removeBrainrot(standProfile: StandProfile, save: boolean?)
 	if typeof(standProfile.Brainrot) == "Instance" then
 		standProfile.Brainrot:Destroy()
 		standProfile.Brainrot = nil
@@ -91,9 +110,37 @@ function StandService:removeBrainrot(standProfile: StandProfile)
 	end
 
 	self.Client.BrainrotRemoved:Fire(standProfile.Owner, standProfile.Asset)
+
+	if save then
+		self.DataService:GetValueObject(standProfile.Owner, "TakenStands"):Update(function(_table)
+			_table[standProfile.Asset:GetAttribute("Index")] = nil
+		end)
+	end
 end
 
 -- Public Methods
+function StandService:GetBrainrotsOnStand(player: Player)
+	assert(isPlayer(player), "player arg must be a Player Instance")
+
+	local plotAsset = self.PlotService:GetPlotStateFromPlayer(player).Asset
+	local stands = plotAsset.Stands
+
+	local brainrots = {}
+	for _, stand in pairs(stands:GetChildren()) do
+		local profile = self:getProfileReference(stand)
+		if not profile.Taken then
+			continue
+		end
+
+		table.insert(brainrots, {
+			BrainrotReferenceId = profile.Brainrot.Name,
+			Mutation = profile.Mutation,
+		})
+	end
+
+	return brainrots
+end
+
 function StandService:GetStandFromBrainrotReferenceId(player: Player, brainrotReferenceId: string)
 	assert(isPlayer(player), "player arg must be a Player Instance")
 	assert(typeof(brainrotReferenceId) == "string", "brainrotReferenceId arg must be a string")
@@ -139,12 +186,19 @@ function StandService:ConnectStand(player: Player, standAsset: any)
 		ProximityPrompt = standAsset.ProximityPrompt.ProximityPrompt,
 		Connections = {},
 		Brainrot = nil,
+		Mutation = "Default",
 		Taken = false,
 		Cash = 0,
 		Owner = player,
 	}
 
 	local profileReference = self:getProfileReference(standAsset) :: StandProfile
+	local takenBrainrotReferenceId = self.DataService:GetValue(player, "TakenStands")[standAsset:GetAttribute("Index")]
+	if takenBrainrotReferenceId then
+		self:placeBrainrot(profileReference, takenBrainrotReferenceId)
+		self.InventoryService:RemoveTool(player, takenBrainrotReferenceId)
+	end
+
 	table.insert(
 		profileReference.Connections,
 		profileReference.ProximityPrompt.Triggered:Connect(function(playerWhoTriggered: Player)
@@ -157,12 +211,14 @@ function StandService:ConnectStand(player: Player, standAsset: any)
 
 			if profileReference.Taken then
 				if typeof(profileReference.Brainrot) == "Instance" then
-					self.InventoryService:GiveTool(player, profileReference.Brainrot.Name, "BrainrotTool")
+					self.InventoryService
+						:GiveTool(player, profileReference.Brainrot.Name, "BrainrotTool")
+						:SetAttribute("Mutation", profileReference.Mutation)
 				end
-				self:removeBrainrot(profileReference)
+				self:removeBrainrot(profileReference, true)
 
 				if tool then
-					self:placeBrainrot(profileReference, brainrotReferenceId)
+					self:placeBrainrot(profileReference, brainrotReferenceId, true)
 					self.InventoryService:RemoveTool(player, brainrotReferenceId)
 				end
 			else
@@ -171,7 +227,7 @@ function StandService:ConnectStand(player: Player, standAsset: any)
 					and tool:IsA("Tool")
 					and tool:GetAttribute("Handler") == "BrainrotTool"
 				then
-					self:placeBrainrot(profileReference, brainrotReferenceId)
+					self:placeBrainrot(profileReference, brainrotReferenceId, true)
 					self.InventoryService:RemoveTool(player, brainrotReferenceId)
 				end
 			end
@@ -185,6 +241,7 @@ function StandService:DisconnectStand(player: Player, standAsset: any)
 		local profileReference = self:getProfileReference(standAsset) :: StandProfile
 		if not profileReference then
 			resolve()
+			return
 		end
 
 		-- Disconnect Connections
@@ -207,6 +264,7 @@ function StandService:KnitInit()
 	self.DataService = knit.GetService("DataService")
 	self.InventoryService = knit.GetService("InventoryService")
 	self.BrainrotService = knit.GetService("BrainrotService")
+	self.PlotService = knit.GetService("PlotService")
 end
 
 function StandService:KnitStart()

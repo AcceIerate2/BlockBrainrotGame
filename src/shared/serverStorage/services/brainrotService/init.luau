@@ -6,11 +6,11 @@ local knit = require(ReplicatedStorage.src.Packages.knit)
 
 -- Utility Modules
 local brainrotHandler = require(ReplicatedStorage.src.utility.brainrotHandler)
+local InstanceCreator = require(ReplicatedStorage.src.utility.InstanceCreator)
 
 -- Config Modules
 local brainrotConfig = require(ReplicatedStorage.src.GameConfiguration.General.brainrotConfig)
 local mutationConfig = require(ReplicatedStorage.src.GameConfiguration.General.mutationConfig)
-local InstanceCreator = require(ReplicatedStorage.src.utility.InstanceCreator)
 
 -- Constants
 local BrainrotAssets = ReplicatedStorage.Assets.Brainrots
@@ -32,25 +32,6 @@ end
 
 function BrainrotService.Client:SellBrainrots(player: Player, brainrotReferenceIds: { string })
 	return self.Server:SellBrainrots(player, brainrotReferenceIds)
-end
-
--- Private Methods
-function BrainrotService:animateBrainrot(brainrotAsset: any)
-	local animationController = brainrotAsset and brainrotAsset:FindFirstChildOfClass("AnimationController")
-	local animator = animationController and animationController:FindFirstChildOfClass("Animator")
-	if not animator then
-		animator = InstanceCreator("Animator", "Animator", animationController)
-	end
-
-	local animationId = brainrotHandler.GetBrainrotAnimations(brainrotAsset.Name).Idle
-	local animationInstance = InstanceCreator("Animation", "IdleAnimation", brainrotAsset, {
-		AnimationId = animationId,
-	})
-
-	local loadedAnimationTrack = animator:LoadAnimation(animationInstance)
-	animationInstance:Destroy()
-
-	loadedAnimationTrack:Play()
 end
 
 -- Public Methods
@@ -105,22 +86,6 @@ function BrainrotService:SellBrainrots(player: Player, brainrotReferenceIds: { s
 	return {
 		Status = true,
 	}
-end
-
-function BrainrotService:GetBrainrotAsset(brainrotName: string, mutation: string, shouldClone: boolean)
-	assert(typeof(brainrotName) == "string", "brainrotName arg must be a string")
-	assert(typeof(mutation) == "string", "mutation arg must be a string")
-
-	brainrotName = brainrotHandler.GetBrainrotNameFromReferenceId(brainrotName)
-	mutation = typeof(mutation) == "string" and mutation or "Default"
-
-	local brainrotAsset = BrainrotAssets:FindFirstChild(mutation):FindFirstChild(brainrotName)
-	if shouldClone then
-		brainrotAsset = brainrotAsset:Clone()
-		self:animateBrainrot(brainrotAsset)
-	end
-
-	return brainrotAsset
 end
 
 function BrainrotService:RngBrainrot(rarity: string)

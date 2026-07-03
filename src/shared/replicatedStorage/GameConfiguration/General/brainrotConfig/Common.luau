@@ -1,5 +1,170 @@
 local Common = {}
 
+Common["NoobiniPizzanini"] = {
+	IncomeRate = 10,
+	Rarity = "Common",
+	SpawnWeight = 50,
+	Icon = "rbxassetid://71606418170750",
+
+	AnimationIds = {
+		Idle = "rbxassetid://113005956942330",
+	},
+}
+
+Common["TimCheese"] = {
+	IncomeRate = 10,
+	Rarity = "Common",
+	SpawnWeight = 50,
+	Icon = "rbxassetid://113029366638482",
+
+	AnimationIds = {
+		Idle = "rbxassetid://83370059939481",
+	},
+}
+
+Common["LiriliLarila"] = {
+	IncomeRate = 10,
+	Rarity = "Common",
+	SpawnWeight = 50,
+	Icon = "rbxassetid://89008368620221",
+
+	AnimationIds = {
+		Idle = "rbxassetid://103192330142474",
+	},
+}
+
+Common["FluriFlura"] = {
+	IncomeRate = 10,
+	Rarity = "Common",
+	SpawnWeight = 50,
+	Icon = "rbxassetid://103695140537567",
+
+	AnimationIds = {
+		Idle = "rbxassetid://77592251144314",
+	},
+}
+
+Common["KiwiPipi"] = {
+	IncomeRate = 10,
+	Rarity = "Common",
+	SpawnWeight = 50,
+	Icon = "rbxassetid://77497252012744",
+
+	AnimationIds = {
+		Idle = "rbxassetid://109504844715349",
+	},
+}
+
+Common["Svinino"] = {
+	IncomeRate = 10,
+	Rarity = "Common",
+	SpawnWeight = 50,
+	Icon = "rbxassetid://83119535216667",
+
+	AnimationIds = {
+		Idle = "rbxassetid://77895533680662",
+	},
+}
+
+Common["MelonOtter"] = {
+	IncomeRate = 10,
+	Rarity = "Common",
+	SpawnWeight = 50,
+	Icon = "rbxassetid://119865150419102",
+
+	AnimationIds = {
+		Idle = "rbxassetid://78570754226359",
+	},
+}
+
+Common["KiwiBird"] = {
+	IncomeRate = 10,
+	Rarity = "Common",
+	SpawnWeight = 50,
+	Icon = "rbxassetid://75083833944999",
+
+	AnimationIds = {
+		Idle = "rbxassetid://123992322727377",
+	},
+}
+
+Common["SickPenguin"] = {
+	IncomeRate = 10,
+	Rarity = "Common",
+	SpawnWeight = 50,
+	Icon = "rbxassetid://70810466174755",
+
+	AnimationIds = {
+		Idle = "rbxassetid://83602497955243",
+	},
+}
+
+Common["JobApplication"] = {
+	IncomeRate = 10,
+	Rarity = "Common",
+	SpawnWeight = 50,
+	Icon = "rbxassetid://92046509880592",
+
+	AnimationIds = {
+		Idle = "rbxassetid://132985846821600",
+	},
+}
+
+Common["PipeMan"] = {
+	IncomeRate = 10,
+	Rarity = "Common",
+	SpawnWeight = 50,
+	Icon = "rbxassetid://134349231323811",
+
+	AnimationIds = {
+		Idle = "rbxassetid://117236878782608",
+	},
+}
+
+Common["Dolphinita"] = {
+	IncomeRate = 10,
+	Rarity = "Common",
+	SpawnWeight = 50,
+	Icon = "rbxassetid://127265047725576",
+
+	AnimationIds = {
+		Idle = "rbxassetid://77930713279500",
+	},
+}
+
+Common["TuTuTuSahur"] = {
+	IncomeRate = 10,
+	Rarity = "Common",
+	SpawnWeight = 50,
+	Icon = "rbxassetid://74338414415353",
+
+	AnimationIds = {
+		Idle = "rbxassetid://136232784990782",
+	},
+}
+
+Common["TalpaDiFerro"] = {
+	IncomeRate = 10,
+	Rarity = "Common",
+	SpawnWeight = 50,
+	Icon = "rbxassetid://131863892005390",
+
+	AnimationIds = {
+		Idle = "rbxassetid://77849382340820",
+	},
+}
+
+Common["BambiniCrostini"] = {
+	IncomeRate = 10,
+	Rarity = "Common",
+	SpawnWeight = 50,
+	Icon = "rbxassetid://103316911915108",
+
+	AnimationIds = {
+		Idle = "rbxassetid://77023161599070",
+	},
+}
+
 Common["67"] = {
 	IncomeRate = 10,
 	Rarity = "Common",
@@ -8,17 +173,6 @@ Common["67"] = {
 
 	AnimationIds = {
 		Idle = "rbxassetid://87480936207274",
-	},
-}
-
-Common["BombardiniCrocodilo"] = {
-	IncomeRate = 10,
-	Rarity = "Common",
-	SpawnWeight = 50,
-	Icon = "rbxassetid://119650527064413",
-
-	AnimationIds = {
-		Idle = "rbxassetid://124347462714625",
 	},
 }
 
@@ -33,28 +187,6 @@ Common["BrBrBatabim"] = {
 	},
 }
 
-Common["TrippiTroppi"] = {
-	IncomeRate = 10,
-	Rarity = "Common",
-	SpawnWeight = 50,
-	Icon = "rbxassetid://87972913009568",
-
-	AnimationIds = {
-		Idle = "rbxassetid://100097781969712",
-	},
-}
-
-Common["ChimpanziniBananini"] = {
-	IncomeRate = 10,
-	Rarity = "Common",
-	SpawnWeight = 50,
-	Icon = "rbxassetid://73205751201522",
-
-	AnimationIds = {
-		Idle = "rbxassetid://869871724554912",
-	},
-}
-
 Common["TungTungTungSahur"] = {
 	IncomeRate = 10,
 	Rarity = "Common",
@@ -63,28 +195,6 @@ Common["TungTungTungSahur"] = {
 
 	AnimationIds = {
 		Idle = "rbxassetid://124645936218589",
-	},
-}
-
-Common["TralaleroTralala"] = {
-	IncomeRate = 10,
-	Rarity = "Common",
-	SpawnWeight = 50,
-	Icon = "rbxassetid://138992981777558",
-
-	AnimationIds = {
-		Idle = "rbxassetid://101827127902246",
-	},
-}
-
-Common["LiriliLarila"] = {
-	IncomeRate = 10,
-	Rarity = "Common",
-	SpawnWeight = 50,
-	Icon = "rbxassetid://89008368620221",
-
-	AnimationIds = {
-		Idle = "rbxassetid://103192330142474",
 	},
 }
 
@@ -143,17 +253,6 @@ Common["GangsterFootera"] = {
 	},
 }
 
-Common["BonecaAmbalabu"] = {
-	IncomeRate = 10,
-	Rarity = "Common",
-	SpawnWeight = 50,
-	Icon = "rbxassetid://135833570114494",
-
-	AnimationIds = {
-		Idle = "rbxassetid://122330045939369",
-	},
-}
-
 Common["TrulimeroTruli"] = {
 	IncomeRate = 10,
 	Rarity = "Common",
@@ -162,17 +261,6 @@ Common["TrulimeroTruli"] = {
 
 	AnimationIds = {
 		Idle = "rbxassetid://125089643092677",
-	},
-}
-
-Common["FrigoCamelo"] = {
-	IncomeRate = 10,
-	Rarity = "Common",
-	SpawnWeight = 50,
-	Icon = "rbxassetid://124682482052885",
-
-	AnimationIds = {
-		Idle = "rbxassetid://115954017666163",
 	},
 }
 
@@ -250,17 +338,6 @@ Common["GorilloWatermelondrillo"] = {
 
 	AnimationIds = {
 		Idle = "rbxassetid://107547787295394",
-	},
-}
-
-Common["UdinDinDinDun"] = {
-	IncomeRate = 10,
-	Rarity = "Common",
-	SpawnWeight = 50,
-	Icon = "rbxassetid://110053801950744",
-
-	AnimationIds = {
-		Idle = "rbxassetid://104207278056799",
 	},
 }
 
@@ -451,6 +528,17 @@ Common["JobApplication"] = {
 	},
 }
 
+Common["BallerinaCappuccina"] = {
+	IncomeRate = 10,
+	Rarity = "Common",
+	SpawnWeight = 50,
+	Icon = "rbxassetid://81494017076106",
+
+	AnimationIds = {
+		Idle = "rbxassetid://87884903426823",
+	},
+}
+
 Common["StrawberryElefant"] = {
 	IncomeRate = 10,
 	Rarity = "Common",
@@ -525,28 +613,6 @@ Common["HotSpotBurittini"] = {
 
 	AnimationIds = {
 		Idle = "rbxassetid://98354941721705",
-	},
-}
-
-Common["ChicleteiraBicicleteira"] = {
-	IncomeRate = 10,
-	Rarity = "Common",
-	SpawnWeight = 50,
-	Icon = "rbxassetid://108255901760618",
-
-	AnimationIds = {
-		Idle = "rbxassetid://75793055069842",
-	},
-}
-
-Common["Nuclearini"] = {
-	IncomeRate = 10,
-	Rarity = "Common",
-	SpawnWeight = 50,
-	Icon = "rbxassetid://131606141302581",
-
-	AnimationIds = {
-		Idle = "rbxassetid://112074278378193",
 	},
 }
 

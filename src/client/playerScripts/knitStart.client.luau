@@ -28,8 +28,9 @@ knit:Start()
 	:andThen(function()
 		print("Client Knit Started.")
 		userInterface()
-		--[[GamepadService:EnableGamepadCursor()]]
+		GamepadService:EnableGamepadCursor(Players.LocalPlayer.PlayerGui:WaitForChild("Hud"):WaitForChild("Drop"))
 
 		InstanceCreator("BoolValue", "ClientReady", Players.LocalPlayer)
+		knit.GetService("PlayerService"):ClientReady():catch(warn)
 	end)
 	:catch(warn)

@@ -63,7 +63,7 @@ function ProfileStoreService:endSession(player: Player)
 		return
 	end
 
-	profile.Data.LastSeen = os.time()
+	profile.Data.LastSession = os.time()
 	profile.Data.JoinedBefore = true
 
 	profile:EndSession()
@@ -74,8 +74,7 @@ function ProfileStoreService:KnitInit()
 	print("ProfileStoreService Initiated.")
 	local profileTemplate = self.Config.DataTemplate
 
-	local profileStoreName = RunService:IsStudio() and HttpService:GenerateGUID(false)
-		or HttpService:GenerateGUID(false)
+	local profileStoreName = RunService:IsStudio() and `Test9` or HttpService:GenerateGUID(false)
 	self.ProfileStore = profileStore.New(profileStoreName, profileTemplate)
 end
 

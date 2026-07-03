@@ -15,6 +15,9 @@ local functions = {
 	Teleport = require(script.teleportAction),
 	InviteFriends = require(script.inviteFriendsAction),
 	Rebirth = require(script.rebirthAction),
+	PurchasePrompt = require(script.purchasePromptAction),
+	ClaimOfflineCash = require(script.claimOfflineCashAction),
+	ToggleIndexMutation = require(script.toggleIndexMutationAction),
 }
 
 return function(button)

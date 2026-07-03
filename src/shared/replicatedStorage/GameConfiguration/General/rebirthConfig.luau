@@ -1,5 +1,6 @@
 -->
 local RebirthConfig = {}
+RebirthConfig.SkipRebirthId = 3607742383
 
 RebirthConfig.ArithmeticTypes = {
 	Addition = "Addition",
@@ -33,10 +34,12 @@ RebirthConfig.Reset = {
 	Cash = {
 		Value = 0,
 	},
+
 	Blocks = {
 		Value = 15,
 		Level = 0,
 	},
+
 	MaxBlocks = {
 		Value = 15,
 		Level = 0,

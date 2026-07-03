@@ -45,10 +45,27 @@ local StandController = knit.CreateController({
 	Name = "StandController",
 	CashCollectCooldown = false,
 	CashCollectCooldownDuration = 0.35,
+
 	ConnectionProfiles = {},
+	CashConnectionProfiles = {},
 })
 
 -- Private Methods
+function StandController:getCashUI(standAsset)
+	local cashCollector = standAsset:FindFirstChild("CashCollector")
+	return cashCollector and cashCollector:FindFirstChildOfClass("SurfaceGui")
+end
+
+function StandController:toggleStandCashVisibility(standAsset, visible: boolean)
+	local ui = self:getCashUI(standAsset)
+	if ui then
+		if visible then
+			ui.Cash.Text = `$0`
+		end
+		ui.Enabled = visible
+	end
+end
+
 function StandController:collectCash(standAsset)
 	self.StandService
 		:CollectCash(standAsset)
@@ -69,22 +86,44 @@ end
 
 function StandController:connectCashCollect(standAsset)
 	self:disconnectCashCollect(standAsset)
-	self.ConnectionProfiles[standAsset] = standAsset.CashCollector.Touched:Connect(function(partThatTouched: BasePart)
-		if not validateCashCollectPart(partThatTouched) then
-			return
-		end
+	self.ConnectionProfiles[standAsset] = standAsset
+		:WaitForChild("CashCollector").Touched
+		:Connect(function(partThatTouched: BasePart)
+			if not validateCashCollectPart(partThatTouched) then
+				return
+			end
 
-		if self.CashCollectCooldown == true then
-			return
-		end
+			if self.CashCollectCooldown == true then
+				return
+			end
 
-		self.CashCollectCooldown = true
-		task.delay(self.CashCollectCooldownDuration, function()
-			self.CashCollectCooldown = false
+			self.CashCollectCooldown = true
+			task.delay(self.CashCollectCooldownDuration, function()
+				self.CashCollectCooldown = false
+			end)
+
+			self:collectCash(standAsset)
 		end)
+end
 
-		self:collectCash(standAsset)
+function StandController:connectCashChangedSignal(standAsset)
+	local ui = self:getCashUI(standAsset)
+	if not ui then
+		return
+	end
+
+	self.CashConnectionProfiles[standAsset] = standAsset.Cash.Changed:Connect(function()
+		if ui then
+			ui.Cash.Text = `${NumberShortner(standAsset.Cash.Value)}`
+		end
 	end)
+end
+
+function StandController:disconnectCashChangedSignal(standAsset)
+	if typeof(self.CashConnectionProfiles[standAsset]) == "RBXScriptConnection" then
+		self.CashConnectionProfiles[standAsset]:Disconnect()
+		self.CashConnectionProfiles[standAsset] = nil
+	end
 end
 
 function StandController:syncUpgradeButton(standAsset)
@@ -126,13 +165,21 @@ end
 
 -- Place/Remove
 function StandController:placed(standAsset, brainrotReferenceId: string)
+	self:toggleStandProximityPromptVisibility(standAsset, true)
 	updateProximityPromptText("Remove", standAsset)
 
 	local brainrotDisplayName = brainrotHandler.GetBrainrotDisplayName(brainrotReferenceId)
 	updateProximityPromptObjectText(brainrotDisplayName, standAsset)
 
+	self:connectCashChangedSignal(standAsset)
+	self:toggleStandCashVisibility(standAsset, true)
 	self:connectCashCollect(standAsset)
 	self:connectUpgradeButton(standAsset)
+
+	local brainrotAsset = standAsset.Brainrot:FindFirstChildOfClass("Model")
+	if brainrotAsset then
+		brainrotHandler.UpdateLevel(brainrotAsset, brainrotReferenceId)
+	end
 
 	self.SellController.RefreshBrainrots:Fire()
 end
@@ -140,7 +187,10 @@ end
 function StandController:removed(standAsset)
 	updateProximityPromptText("Place", standAsset)
 	updateProximityPromptObjectText("Empty", standAsset)
+	self:toggleStandProximityPromptVisibility(standAsset, false)
 
+	self:disconnectCashChangedSignal(standAsset)
+	self:toggleStandCashVisibility(standAsset, false)
 	self:disconnectCashCollect(standAsset)
 	self:disconnectUpgradeButton(standAsset)
 
@@ -157,25 +207,41 @@ function StandController:listenToService()
 	end)
 end
 
+function StandController:toggleStandProximityPromptVisibility(standAsset, toggle: boolean)
+	local proximityPrompt =
+		standAsset:WaitForChild("ProximityPrompt"):WaitForChild("ProximityPrompt") :: ProximityPrompt
+	local equippedTool = Player.Character and Player.Character:FindFirstChildOfClass("Tool")
+	if equippedTool and proximityPrompt.ActionText == "Remove" then
+		proximityPrompt.ActionText = "Replace"
+	elseif not equippedTool and proximityPrompt.ActionText == "Replace" then
+		proximityPrompt.ActionText = "Remove"
+	end
+
+	if toggle == false and (proximityPrompt.ActionText == "Remove" or proximityPrompt.ActionText == "Replace") then
+		proximityPrompt.Enabled = true
+	else
+		proximityPrompt.Enabled = toggle
+	end
+end
+
 -- Public Methods
 function StandController:ToggleProximityPromptVisibility(toggle: boolean)
 	assert(typeof(toggle) == "boolean", "toggle arg must be a boolean")
 	local plotAsset = self.PlotController:GetPlotAsset()
 	for _, stand in pairs(plotAsset:WaitForChild("Stands"):GetChildren()) do
-		local proximityPrompt = stand:WaitForChild("ProximityPrompt"):WaitForChild("ProximityPrompt") :: ProximityPrompt
-		local equippedTool = Player.Character and Player.Character:FindFirstChildOfClass("Tool")
-		if equippedTool and proximityPrompt.ActionText == "Remove" then
-			proximityPrompt.ActionText = "Replace"
-		elseif not equippedTool and proximityPrompt.ActionText == "Replace" then
-			proximityPrompt.ActionText = "Remove"
-		end
+		self:toggleStandProximityPromptVisibility(stand, toggle)
+	end
+end
 
-		if toggle == false and (proximityPrompt.ActionText == "Remove" or proximityPrompt.ActionText == "Replace") then
-			proximityPrompt.Enabled = true
-		else
-			proximityPrompt.Enabled = toggle
+function StandController:GetStandFromBrainrotReferenceId(brainrotReferenceId: string)
+	assert(typeof(brainrotReferenceId) == "string", "brainrotReferenceId arg must be a string")
+	for standAsset, _ in pairs(self.ConnectionProfiles) do
+		local brainrot = standAsset.Brainrot:FindFirstChildOfClass("Model")
+		if brainrot and brainrot.Name == brainrotReferenceId then
+			return standAsset
 		end
 	end
+	return
 end
 
 -- LifeCycle

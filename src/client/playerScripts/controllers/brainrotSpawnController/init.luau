@@ -15,6 +15,8 @@ function BrainrotSpawnController:Connect() end
 function BrainrotSpawnController:Disconnect() end
 
 -- LifeCycle
-function BrainrotSpawnController:KnitInit() end
+function BrainrotSpawnController:KnitInit()
+	self.BrainrotSpawnService = knit.GetService("BrainrotSpawnService")
+end
 
 return BrainrotSpawnController

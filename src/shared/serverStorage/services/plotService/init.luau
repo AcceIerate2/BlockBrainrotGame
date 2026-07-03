@@ -86,7 +86,7 @@ function PlotService:syncPlot(player: Player, plotState: PlotState): { () -> () 
 	local extraFloorAssets = {}
 	local extraPlotFloors = self.DataService:GetValue(player, "ExtraPlotFloors")
 	for i = 1, extraPlotFloors do
-		table.insert(extraFloorAssets, self:AddFloor(player))
+		table.insert(extraFloorAssets, self:AddFloor(player, true))
 	end
 
 	table.insert(callbackFunctions, function()
@@ -96,28 +96,37 @@ function PlotService:syncPlot(player: Player, plotState: PlotState): { () -> () 
 	end)
 
 	-- Load Stands
-	local extraStandAssets = {}
-	local extraPlotStands = self.DataService:GetValue(player, "ExtraPlotStands")
-	for i = 1, extraPlotStands + 8 do
-		table.insert(extraStandAssets, self:AddStand(player))
-	end
+	task.spawn(function()
+		repeat
+			task.wait()
+		until self.PlayerService.LoadedClients[player] == true
 
-	table.insert(callbackFunctions, function()
-		for _, extraStandAsset in pairs(extraStandAssets) do
-			self.StandService
-				:DisconnectStand(player, extraStandAsset)
-				:andThen(function()
-					extraStandAsset:Destroy()
-				end)
-				:catch(warn)
+		local extraStandAssets = {}
+		local extraPlotStands = self.DataService:GetValue(player, "ExtraPlotStands")
+		for i = 1, extraPlotStands + 8 do
+			local stand = self:AddStand(player, true)
+			if stand then
+				table.insert(extraStandAssets, stand)
+			end
 		end
+
+		table.insert(callbackFunctions, function()
+			for _, extraStandAsset in pairs(extraStandAssets) do
+				self.StandService
+					:DisconnectStand(player, extraStandAsset)
+					:andThen(function()
+						extraStandAsset:Destroy()
+					end)
+					:catch(warn)
+			end
+		end)
 	end)
 
 	return callbackFunctions
 end
 
 -- Public Methods
-function PlotService:AddStand(player: Player)
+function PlotService:AddStand(player: Player, shouldNotSave: boolean?)
 	assert(isPlayer(player), "player arg must be a Player Instance")
 
 	local playerFloors = self.DataService:GetValue(player, "ExtraPlotFloors") + 1
@@ -138,7 +147,7 @@ function PlotService:AddStand(player: Player)
 	local floorIndex = math.ceil(newStandIndex / 8)
 
 	if floorIndex > playerFloors then
-		warn("Could not place new stand - not enough floors")
+		warn("Could not place new stand - not enough floors", newStandIndex)
 		return
 	end
 
@@ -164,16 +173,19 @@ function PlotService:AddStand(player: Player)
 
 	local newStand = StandAsset:Clone()
 	newStand.Name = `Stand_{newStandIndex}`
+	newStand:SetAttribute("Index", tostring(newStandIndex))
 	newStand:PivotTo(spawnPoint:GetPivot())
 	newStand.Parent = standFolder
 
-	extraPlotStandsVO:Set(extraPlotStandsVO:Get() + 1)
+	if not shouldNotSave then
+		extraPlotStandsVO:Set(extraPlotStandsVO:Get() + 1)
+	end
 	self.StandService:ConnectStand(player, newStand)
 
 	return newStand
 end
 
-function PlotService:AddFloor(player: Player)
+function PlotService:AddFloor(player: Player, shouldNotSave: boolean?)
 	assert(isPlayer(player), "player arg must be a Player Instance")
 	local extraPlotFloorsVO = self.DataService:GetValueObject(player, "ExtraPlotFloors")
 	local playerFloors = extraPlotFloorsVO:Get()
@@ -212,7 +224,9 @@ function PlotService:AddFloor(player: Player)
 	newFloorAsset:PivotTo(pivot)
 	newFloorAsset.Parent = plotState.Asset.Floors
 
-	extraPlotFloorsVO:Set(playerFloors + 1)
+	if not shouldNotSave then
+		extraPlotFloorsVO:Set(playerFloors + 1)
+	end
 	return newFloorAsset
 end
 
@@ -276,6 +290,7 @@ end
 function PlotService:KnitInit()
 	self.DataService = knit.GetService("DataService")
 	self.StandService = knit.GetService("StandService")
+	self.PlayerService = knit.GetService("PlayerService")
 end
 
 function PlotService:KnitStart()

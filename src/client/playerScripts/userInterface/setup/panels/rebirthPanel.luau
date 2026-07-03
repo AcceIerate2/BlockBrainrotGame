@@ -10,7 +10,35 @@ local NumberShortner = require(ReplicatedStorage.src.utility.NumberShortner)
 -->
 local RebirthPanel = {}
 
-function RebirthPanel:updateRewards(payload) end
+function RebirthPanel:updateRewards(payload: {
+	CashMultiplier: { Current: number, Next: number },
+	BlockMultiplier: { Current: number, Next: number },
+})
+	assert(typeof(payload) == "table", "payload arg must be a table")
+
+	local cashMultiplier = payload.CashMultiplier
+	local blockMultiplier = payload.BlockMultiplier
+
+	assert(typeof(cashMultiplier) == "table", "payload.CashMultiplier must be a table")
+	assert(typeof(blockMultiplier) == "table", "payload.BlockMultiplier must be a table")
+
+	local currentRebirths = self.DataController:GetValue("Rebirths") or 0
+	local nextRebirths = currentRebirths + 1
+
+	local currentFrame = self.RewardsFrame:WaitForChild("Current")
+	local nextFrame = self.RewardsFrame:WaitForChild("Next")
+
+	currentFrame:WaitForChild("CurrentRebirths").Text = `Rebirth {currentRebirths}`
+	nextFrame:WaitForChild("NextRebirths").Text = `Rebirth {nextRebirths}`
+
+	currentFrame:WaitForChild("CashMultiplier"):WaitForChild("Label").Text = `x{cashMultiplier.Current}`
+
+	nextFrame:WaitForChild("CashMultiplier"):WaitForChild("Label").Text = `x{cashMultiplier.Next}`
+
+	currentFrame:WaitForChild("BlockMultiplier"):WaitForChild("Label").Text = `x{blockMultiplier.Current}`
+
+	nextFrame:WaitForChild("BlockMultiplier"):WaitForChild("Label").Text = `x{blockMultiplier.Next}`
+end
 
 function RebirthPanel:updateRequirement(payload: { Current: number, Requirement: number })
 	assert(typeof(payload) == "table", "payload arg must be a table")
@@ -22,6 +50,7 @@ end
 
 function RebirthPanel:Init(player: Player)
 	self.RebirthController = knit.GetController("RebirthController")
+	self.DataController = knit.GetController("DataController")
 
 	self.Player = player
 	self.Panel = self.Player.PlayerGui:WaitForChild("Panels"):WaitForChild("Rebirths")
@@ -38,8 +67,11 @@ function RebirthPanel:Init(player: Player)
 	)
 
 	self:updateRewards(self.RebirthController:GetRewards())
-	self.RebirthController.Signals.UpdateRewards:Connect(function(value)
-		self:updateRewards()
+	self.RebirthController.Signals.UpdateRewards:Connect(function(response: {
+		CashMultipler: { Current: number, Next: number },
+		BlockMultiplier: { Current: number, Next: number },
+	})
+		self:updateRewards(response)
 	end)
 end
 

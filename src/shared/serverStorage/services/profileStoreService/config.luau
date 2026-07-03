@@ -44,6 +44,7 @@ return {
 
 		ExtraPlotFloors = 0,
 		ExtraPlotStands = 0,
+		TakenStands = {},
 
 		MaxHold = {
 			Value = 1,
@@ -53,7 +54,7 @@ return {
 		BlockMultiplier = 1,
 		CashMultiplier = 1,
 
-		LastSeen = 0,
+		LastSession = 0,
 		JoinedBefore = false,
 		AvatarHeadshotAssetId = "",
 

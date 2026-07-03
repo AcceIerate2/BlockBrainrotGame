@@ -149,12 +149,15 @@ function CarryService:getLatestBrainrotAssetProfile(player: Player)
 end
 
 -- Public Methods
-function CarryService:GetActiveBrainrots(player: Player): { string }
+function CarryService:GetActiveBrainrots(player: Player): { { Name: string, Mutation: string } }
 	assert(isPlayer(player), "player arg must be a Player Instance")
 	local profile = self:getProfile(player) :: Profile
 	local brainrotNames = {}
 	for asset, _ in pairs(profile.Assets) do
-		table.insert(brainrotNames, asset.Name)
+		table.insert(brainrotNames, {
+			Name = asset.Name,
+			Mutation = asset:GetAttribute("Mutation"),
+		})
 	end
 	return brainrotNames
 end
@@ -263,6 +266,11 @@ function CarryService:DropAll(player: Player, shouldDropAll: boolean)
 	assert(isPlayer(player), "player arg must be a Player Instance")
 	assert(typeof(shouldDropAll) == "boolean", "shouldDropAll arg must be a boolean")
 	local profile = self:getProfile(player) :: Profile
+	if not profile then
+		warn(`Could not find profile`)
+		return
+	end
+
 	for asset, _ in pairs(profile.Assets) do
 		self:DropSpecific(player, asset, shouldDropAll)
 	end
@@ -291,11 +299,11 @@ function CarryService:Disconnect(player: Player)
 	local profile = self:getProfile(player) :: Profile
 	self:DropAll(player, false)
 
-	task.defer(function()
+	if profile then
 		profile.Amount = 0
 		profile.IsCarrying = false
 		self.Profiles[player] = nil
-	end)
+	end
 end
 
 -- LifeCycle

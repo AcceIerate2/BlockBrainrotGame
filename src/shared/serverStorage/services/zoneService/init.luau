@@ -107,11 +107,11 @@ function ZoneService:listenToZoneEntriesAndExits(zone: BasePart)
 					self.BlockTrailService:RefundBlocks(playerThatEntered)
 				else
 					local brainrotNames = self.CarryService:GetActiveBrainrots(playerThatEntered) :: { string }
-					for _index, brainrotName: string in pairs(brainrotNames) do
+					for _index, brainrotData: { Name: string, Mutation: string } in pairs(brainrotNames) do
 						local newGuid = HttpService:GenerateGUID(false)
-						local referenceId = `{brainrotName}_{newGuid}`
+						local referenceId = `{brainrotData.Name}_{newGuid}`
 						self.InventoryService:Give(playerThatEntered, referenceId, "BrainrotTool", {
-							Mutation = "Default",
+							Mutation = brainrotData.Mutation or "Default",
 							Level = 1,
 						})
 

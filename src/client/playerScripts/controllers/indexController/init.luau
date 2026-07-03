@@ -28,6 +28,7 @@ local IndexController = knit.CreateController({
 
 	Signals = {
 		Added = Signal.new(),
+		ToggleMutationScrollingFrame = Signal.new(),
 	},
 })
 
@@ -48,6 +49,11 @@ function IndexController:listenToIndexService()
 end
 
 -- Public Methods
+function IndexController:ToggleMutationScrollingFrame(mutation: string)
+	assert(typeof(mutation) == "string", "mutation arg must be a string")
+	self.Signals.ToggleMutationScrollingFrame:Fire(mutation)
+end
+
 function IndexController:Owned(brainrotReferenceId: string, mutation: string)
 	assert(typeof(brainrotReferenceId) == "string", "brainrotReferenceId arg must be a string")
 	assert(typeof(mutation) == "string", "mutation arg must be a string")

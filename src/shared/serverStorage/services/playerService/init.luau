@@ -16,7 +16,19 @@ local PlayerService = knit.CreateService({
 	Name = "PlayerService",
 	Client = {},
 	DisconnectFunctions = {},
+	LoadedClients = {},
 })
+
+-- Client Exposed Methods
+function PlayerService.Client:ClientReady(player: Player)
+	return self.Server:clientReady(player)
+end
+
+-- Private Methods
+function PlayerService:clientReady(player: Player)
+	assert(typeof(player) == "Instance" and player:IsA("Player"), "player arg must be a Player Instance")
+	self.LoadedClients[player] = true
+end
 
 function PlayerService:load(player: Player)
 	self.DisconnectFunctions[player] = {}
@@ -72,6 +84,7 @@ end
 
 function PlayerService:unload(player: Player)
 	self.BlockTrailService:ClearBlocks(player)
+	self.OfflineCashService:ClearPlayerReferences(player)
 
 	local playerDisconnectFunctions = self.DisconnectFunctions[player]
 	if not TypeCheck.table(playerDisconnectFunctions) then
@@ -87,9 +100,12 @@ function PlayerService:unload(player: Player)
 
 		functionToCall(table.unpack(data["Args"]))
 	end
+
+	self.DisconnectFunctions[player] = nil
+	self.LoadedClients[player] = nil
 end
 
--- starts all connections
+-- LifeCycle
 function PlayerService:KnitInit()
 	self.ProfileStoreService = knit.GetService("ProfileStoreService")
 	self.DataService = knit.GetService("DataService")
@@ -100,6 +116,7 @@ function PlayerService:KnitInit()
 	self.BlockTrailService = knit.GetService("BlockTrailService")
 	self.CarryService = knit.GetService("CarryService")
 	self.IndexService = knit.GetService("IndexService")
+	self.OfflineCashService = knit.GetService("OfflineCashService")
 
 	-- Player Connections
 	Players.PlayerAdded:Connect(function(player: Player)

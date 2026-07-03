@@ -100,6 +100,7 @@ function InventoryService:GiveTool(player: Player, toolReferenceId: string, hand
 	local tool = self.Utility:CreateTool(toolReferenceId, handler) :: Tool
 	tool.Name = toolReferenceId
 	tool.Parent = player.Backpack
+	return tool
 end
 
 function InventoryService:Remove(player: Player, toolName: string)
@@ -162,6 +163,10 @@ function InventoryService:Give(player: Player, toolName: string, handler: string
 	end
 
 	local tool = self.Utility:CreateTool(toolName, handler)
+	if handler == "BrainrotTool" then
+		tool:SetAttribute("Mutation", customData.Mutation)
+	end
+
 	tool.Parent = player.Backpack
 end
 
@@ -177,7 +182,10 @@ function InventoryService:LoadTools(player: Player)
 		for toolName: string, data: {
 			Quantity: number,
 			Handler: string,
-		} in pairs(playerInventory) do
+			Mutation: string?,
+		} in
+			pairs(playerInventory)
+		do
 			if
 				data.Handler == "BrainrotTool" and self.StandService:GetStandFromBrainrotReferenceId(player, toolName)
 			then
@@ -185,6 +193,10 @@ function InventoryService:LoadTools(player: Player)
 			end
 
 			local tool = self.Utility:CreateTool(toolName, data.Handler)
+			if data.Handler == "BrainrotTool" then
+				tool:SetAttribute("Mutation", data.Mutation)
+			end
+
 			tool.Parent = player.Backpack
 		end
 	end

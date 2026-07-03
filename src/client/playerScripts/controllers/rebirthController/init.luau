@@ -18,7 +18,7 @@ local RebirthController = knit.CreateController({
 })
 
 -- Private Methods
-function RebirthController:Update()
+function RebirthController:update()
 	local currentRebirths = self.DataController:GetValue("Rebirths")
 	local requirementValue = self.DataController:GetValue(rebirthConfig.RequirementValue)
 
@@ -71,14 +71,14 @@ end
 
 function RebirthController:KnitStart()
 	self.DataController:GetValueChangedSignal(rebirthConfig.RequirementValue):Connect(function()
-		self:Update()
+		self:update()
 	end)
 
 	self.DataController:GetValueChangedSignal("Rebirths"):Connect(function()
-		self:Update()
+		self:update()
 	end)
 
-	self:Update()
+	self:update()
 end
 
 return RebirthController

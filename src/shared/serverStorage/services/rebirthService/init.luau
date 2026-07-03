@@ -2,8 +2,10 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 -- Packages
-local rebirthConfig = require(ReplicatedStorage.src.GameConfiguration.General.rebirthConfig)
 local knit = require(ReplicatedStorage.src.Packages.knit)
+
+-- Config Modules
+local rebirthConfig = require(ReplicatedStorage.src.GameConfiguration.General.rebirthConfig)
 
 -- Helper Functions
 local function isPlayer(player: Player?): boolean
@@ -32,7 +34,7 @@ function RebirthService:Rebirth(player: Player, skip: boolean?)
 	local rebirthRequirement = rebirthConfig.CalculateCostToRebirth(currentRebirths)
 	local requirementValue = self.DataService:GetValue(player, rebirthConfig.RequirementValue)
 
-	if requirementValue.Value < rebirthRequirement then
+	if not skip and requirementValue.Value < rebirthRequirement then
 		return {
 			Status = false,
 			Reason = "You don't meet the requirements yet!",
