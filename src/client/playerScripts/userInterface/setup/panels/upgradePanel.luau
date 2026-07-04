@@ -28,6 +28,7 @@ end
 
 function UpgradePanel:upgradePanelDetails(payload: ControllerPayload)
 	local card = self:getUpgradeCard(payload.UpgradeType)
+
 	card:WaitForChild("Details"):WaitForChild("Content"):WaitForChild("TextLabel").Text =
 		`{NumberShortner(payload.Value)}`
 
@@ -37,6 +38,17 @@ function UpgradePanel:upgradePanelDetails(payload: ControllerPayload)
 	if payload.UpgradeType ~= "Carry" then
 		card:WaitForChild("Buttons"):WaitForChild("CashUpgrade10"):WaitForChild("Cost").Text =
 			`${NumberShortner(payload.CostToUpgrade * 10)}`
+	end
+
+	if payload.UpgradeType == "Blocks" then
+		card:WaitForChild("Buttons"):WaitForChild("CashUpgrade1"):WaitForChild("Amount").Text =
+			`+{math.round(1 * self.DataController:GetValue("BlockMultiplier"))}`
+
+		card:WaitForChild("Buttons"):WaitForChild("CashUpgrade10"):WaitForChild("Amount").Text =
+			`+{math.round(10 * self.DataController:GetValue("BlockMultiplier"))}`
+
+		card:WaitForChild("Buttons"):WaitForChild("RobuxUpgrade10"):WaitForChild("Amount").Text =
+			`+{math.round(10 * self.DataController:GetValue("BlockMultiplier"))}`
 	end
 end
 

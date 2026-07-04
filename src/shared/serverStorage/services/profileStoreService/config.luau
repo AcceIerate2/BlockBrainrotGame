@@ -53,6 +53,7 @@ return {
 
 		BlockMultiplier = 1,
 		CashMultiplier = 1,
+		WalkSpeedMultiplier = 1,
 
 		LastSession = 0,
 		JoinedBefore = false,

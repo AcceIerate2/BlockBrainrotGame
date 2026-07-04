@@ -6,6 +6,9 @@ local RunService = game:GetService("RunService")
 -- Packages
 local knit = require(ReplicatedStorage.src.Packages.knit)
 
+-- Config Modules
+local blocksConfig = require(ReplicatedStorage.src.GameConfiguration.General.blocksConfig)
+
 -- Constants
 local Player = Players.LocalPlayer
 local BlockAssets = ReplicatedStorage:WaitForChild("Assets"):WaitForChild("Blocks")
@@ -200,6 +203,12 @@ function BlockTrailController:Connect(payload: { Asset: any, ZoneType: string, L
 	self.LastCellX = nil
 	self.LastCellZ = nil
 
+	local block = self.DataController:GetValue("EquippedBlock")
+	local humanoid = Player.Character and Player.Character:FindFirstChildOfClass("Humanoid")
+	if humanoid then
+		humanoid.WalkSpeed = blocksConfig.DefaultWalkSpeed * blocksConfig.Blocks[block].WalkSpeedMultiplier
+	end
+
 	self.Connection = RunService.RenderStepped:Connect(function()
 		if self.WaitForEnoughBlocks == true or isDead() then
 			return
@@ -235,6 +244,11 @@ function BlockTrailController:Disconnect()
 
 	self.LastCellX = nil
 	self.LastCellZ = nil
+
+	local humanoid = Player.Character and Player.Character:FindFirstChildOfClass("Humanoid")
+	if humanoid then
+		humanoid.WalkSpeed = blocksConfig.DefaultWalkSpeed
+	end
 end
 
 -- LifeCycle
@@ -252,6 +266,15 @@ function BlockTrailController:KnitStart()
 	update(self.DataController:GetValue("Blocks").Value)
 	self.DataController:GetValueChangedSignal("Blocks"):Connect(function(data: { Value: number, Level: number })
 		update(data.Value)
+	end)
+
+	self.DataController:GetValueChangedSignal("EquippedBlock"):Connect(function(newBlock: string)
+		if #self.PlacedBlocks >= 1 then
+			local humanoid = Player.Character and Player.Character:FindFirstChildOfClass("Humanoid")
+			if humanoid then
+				humanoid.WalkSpeed = blocksConfig.DefaultWalkSpeed * blocksConfig.Blocks[newBlock].WalkSpeedMultiplier
+			end
+		end
 	end)
 end
 

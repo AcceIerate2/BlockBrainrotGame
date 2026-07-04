@@ -66,6 +66,8 @@ function BlocksPanel:syncCard(blockName: string, props: { Equipped: boolean, Own
 
 	card:WaitForChild("Buttons"):WaitForChild("Toggle").BackgroundColor3 = backgroundColor
 	card:WaitForChild("Buttons"):WaitForChild("Toggle"):WaitForChild("TextLabel").Text = `{textToDisplay}`
+	card:WaitForChild("Details"):WaitForChild("Content"):WaitForChild("WalkSpeedMultiplier").Text =
+		`x{blocksConfig.Blocks[blockName].WalkSpeedMultiplier} WalkSpeed`
 end
 
 function BlocksPanel:createCards()

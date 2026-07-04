@@ -84,7 +84,7 @@ function StandService:placeBrainrot(standProfile: StandProfile, brainrotReferenc
 			brainrotReferenceId,
 			brainrotHandler.GetLevelFromBrainrotReferenceId(brainrotReferenceId, standProfile.Owner),
 			standProfile.Owner
-		)
+		) * self.DataService:GetValue(standProfile.Owner, "CashMultiplier")
 
 		standProfile.Asset.Cash.Value += incomeRate
 		standProfile.Cash += incomeRate

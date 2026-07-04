@@ -69,8 +69,16 @@ function UpgradeService:Upgrade(player: Player, upgradeType: string, upgradeAmou
 	end
 
 	local valueObject = self.DataService:GetValueObject(player, upgradeType == "Carry" and "MaxHold" or upgradeType)
+
+	local currentData = valueObject:Get()
+	local baseUpgradeAmount = upgradeAmount
+	local actualUpgradeAmount = baseUpgradeAmount
+
 	if upgradeType == "Blocks" then
-		if valueObject:Get().Value + upgradeAmount > self.DataService:GetValue(player, "MaxBlocks").Value then
+		local blockMultiplier = self.DataService:GetValue(player, "BlockMultiplier") or 1
+		actualUpgradeAmount = math.max(1, math.round(baseUpgradeAmount * blockMultiplier))
+
+		if currentData.Value + actualUpgradeAmount > self.DataService:GetValue(player, "MaxBlocks").Value then
 			return {
 				Status = false,
 				Reason = "You've reached your limit! Upgrade Max Blocks to buy more!",
@@ -78,14 +86,15 @@ function UpgradeService:Upgrade(player: Player, upgradeType: string, upgradeAmou
 		end
 	end
 
-	if self:reachedMaxLevel(upgradeType, valueObject:Get().Level + upgradeAmount) then
+	if self:reachedMaxLevel(upgradeType, currentData.Level + baseUpgradeAmount) then
 		return {
 			Status = false,
 			Reason = "Max Level",
 		}
 	end
 
-	local costToUpgrade = self:getUpgradeCost(upgradeType, valueObject:Get().Level + upgradeAmount)
+	local costToUpgrade = self:getUpgradeCost(upgradeType, currentData.Level + baseUpgradeAmount)
+
 	if not self.CashService:canAfford(player, costToUpgrade) then
 		return {
 			Status = false,
@@ -94,16 +103,20 @@ function UpgradeService:Upgrade(player: Player, upgradeType: string, upgradeAmou
 	end
 
 	self.CashService:manipulatePlayerCash(player, -costToUpgrade, "Addition")
+
 	valueObject:Update(function(_table)
-		_table.Value += upgradeAmount
-		_table.Level += upgradeAmount
+		_table.Value += actualUpgradeAmount
+		_table.Level += baseUpgradeAmount
 	end)
+
+	local newData = valueObject:Get()
 
 	return {
 		Status = true,
-		NewLevel = valueObject:Get().Level,
-		NewValue = valueObject:Get().Value,
-		CostToUpgrade = self:getUpgradeCost(upgradeType, valueObject:Get().Level + upgradeAmount),
+		NewLevel = newData.Level,
+		NewValue = newData.Value,
+		AmountGained = actualUpgradeAmount,
+		CostToUpgrade = self:getUpgradeCost(upgradeType, newData.Level + baseUpgradeAmount),
 	}
 end
 
