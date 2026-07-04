@@ -39,6 +39,26 @@ local function getBrainrotScaleMultiplier(level: number): number
 	return multiplier
 end
 
+local function getBrainrotUi(brainrotAsset: Instance, timeout: number?): BillboardGui?
+	timeout = timeout or 3
+	local startTime = os.clock()
+
+	repeat
+		if typeof(brainrotAsset) ~= "Instance" then
+			return nil
+		end
+
+		local ui = brainrotAsset:FindFirstChildWhichIsA("BillboardGui", true)
+		if ui then
+			return ui
+		end
+
+		task.wait()
+	until os.clock() - startTime >= timeout
+
+	return nil
+end
+
 -->
 local BrainrotHandler = {}
 
@@ -138,7 +158,11 @@ function BrainrotHandler.GetBrainrotAnimations(brainrotReferenceId: string)
 end
 
 function BrainrotHandler.ToggleCountdownState(brainrotAsset: any, enabled: boolean)
-	local ui = brainrotAsset:FindFirstChildOfClass("MeshPart"):FindFirstChildOfClass("BillboardGui")
+	local ui = getBrainrotUi(brainrotAsset)
+	if not ui then
+		return
+	end
+
 	ui.Labels.Content.Countdown.Visible = enabled
 	ui.Labels.Content.Level.Visible = not enabled
 end
@@ -149,7 +173,10 @@ function BrainrotHandler.UpdateLevel(
 	newLevel: number?,
 	player: Player?
 )
-	local ui = brainrotAsset:FindFirstChildOfClass("MeshPart"):FindFirstChildOfClass("BillboardGui")
+	local ui = getBrainrotUi(brainrotAsset)
+	if not ui then
+		return
+	end
 
 	local level = newLevel or BrainrotHandler.GetLevelFromBrainrotReferenceId(brainrotReferenceId)
 	ui.Labels.Content.Level.Text = `Level {level}`
@@ -216,6 +243,15 @@ function BrainrotHandler.GetBrainrotAsset(brainrotName: string, mutation: string
 	end
 
 	return brainrotAsset
+end
+
+function BrainrotHandler.UpdateCountdown(brainrotAsset: any, newText: string)
+	local ui = getBrainrotUi(brainrotAsset)
+	if not ui then
+		return
+	end
+
+	ui.Labels.Content.Countdown.Label.Text = `{newText}`
 end
 
 return BrainrotHandler

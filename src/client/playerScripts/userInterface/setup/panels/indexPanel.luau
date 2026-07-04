@@ -53,7 +53,7 @@ function IndexPanel:loadIndexCards(mutation: string, scrollingFrame: ScrollingFr
 
 		newCard.Visible = true
 		newCard.Name = `{brainrotAsset.Name}`
-		-- newCard.LayoutOrder = brainrotHandler.GetBrainrotBaseIncomeRate(brainrotAsset.Name)
+		newCard.LayoutOrder = brainrotHandler.GetBrainrotBaseIncomeRate(brainrotAsset.Name)
 		newCard.Parent = scrollingFrame
 
 		self.Cards[mutation][brainrotAsset.Name] = newCard
@@ -66,7 +66,11 @@ function IndexPanel:toggleMutationScrollingFrame(mutation: string)
 		if scrollingFrame == self.ScrollingFrameTemplate or not scrollingFrame:IsA("ScrollingFrame") then
 			continue
 		end
+
 		scrollingFrame.Visible = scrollingFrame.Name == `{mutation}ScrollingFrame`
+		if scrollingFrame.Name == `{mutation}ScrollingFrame` then
+			scrollingFrame.CanvasPosition = Vector2.new(0, 0)
+		end
 	end
 end
 
@@ -87,6 +91,7 @@ function IndexPanel:loadMutations()
 		newMutationBtn:WaitForChild("Label").Text = mutation:upper()
 		newMutationBtn.Visible = true
 		newMutationBtn.Name = mutation
+		newMutationBtn.LayoutOrder = -mutationConfig.Weight
 		newMutationBtn.Parent = self.MutationsFrame
 
 		newMutationBtn:AddTag("GuiButton")

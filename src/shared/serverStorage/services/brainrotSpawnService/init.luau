@@ -23,6 +23,8 @@ local BrainrotSpawnService = knit.CreateService({
 	MaxBrainrotsPerZone = 10,
 	BrainrotLifeTimeDuration = 60,
 	ZoneProfiles = {},
+
+	Client = {},
 })
 
 -- Private Methods
@@ -126,6 +128,7 @@ function BrainrotSpawnService:DestroyBrainrot(brainrotAsset)
 end
 
 function BrainrotSpawnService:BrainrotDestroyed(brainrotAsset)
+	brainrotAsset:SetAttribute("State", "Destroying")
 	self:DestroyBrainrot(brainrotAsset)
 end
 
@@ -133,6 +136,7 @@ function BrainrotSpawnService:BrainrotDropped(brainrotAsset)
 	local profile = self:getBrainrotProfile(brainrotAsset)
 	profile.State = "Idle"
 	brainrotHandler.ToggleCountdownState(brainrotAsset, true)
+	brainrotAsset:SetAttribute("State", "Idle")
 end
 
 function BrainrotSpawnService:SpawnBrainrot(brainrotSpawn, replace: boolean)
@@ -150,6 +154,10 @@ function BrainrotSpawnService:SpawnBrainrot(brainrotSpawn, replace: boolean)
 	brainrotAsset:SetAttribute("OriginalCFrame", cFrame)
 	brainrotAsset:SetAttribute("Mutation", mutation)
 	brainrotAsset:SetAttribute("DefaultScale", brainrotAsset:GetScale())
+
+	local expiresAt = os.time() + self.BrainrotLifeTimeDuration
+	brainrotAsset:SetAttribute("ExpiresAt", expiresAt)
+	brainrotAsset:SetAttribute("State", "Idle")
 
 	local proximityPrompt = InstanceCreator("ProximityPrompt", "ProximityPrompt", brainrotAsset.PrimaryPart, {
 		ActionText = "Pick Up",
@@ -172,8 +180,11 @@ function BrainrotSpawnService:SpawnBrainrot(brainrotSpawn, replace: boolean)
 				return
 			end
 
+			brainrotAsset:SetAttribute("State", "Carrying")
+
 			profileReference.State = "Carrying"
 			proximityPrompt.Enabled = false
+
 			brainrotHandler.ToggleCountdownState(brainrotAsset, false)
 			self.CarryService:Carry(playerWhoTriggered, brainrotAsset)
 		end)

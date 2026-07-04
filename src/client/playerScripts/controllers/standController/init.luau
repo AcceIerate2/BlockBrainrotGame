@@ -52,8 +52,8 @@ local StandController = knit.CreateController({
 
 -- Private Methods
 function StandController:getCashUI(standAsset)
-	local cashCollector = standAsset:FindFirstChild("CashCollector")
-	return cashCollector and cashCollector:FindFirstChildOfClass("SurfaceGui")
+	local cashCollector = standAsset:WaitForChild("CashCollector")
+	return cashCollector and cashCollector:WaitForChild("UI")
 end
 
 function StandController:toggleStandCashVisibility(standAsset, visible: boolean)

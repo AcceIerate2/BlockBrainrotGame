@@ -53,12 +53,14 @@ function OfflineCashController:KnitInit()
 end
 
 function OfflineCashController:KnitStart()
-	Players.LocalPlayer:WaitForChild("ClientReady")
-	local reward = self:CalculateOfflineCashReward()
-	if reward > 0 then
-		self.Signals.UpdateCashLabel:Fire(reward)
-		self.PanelController:togglePanel("OfflineReward")
-	end
+	task.spawn(function()
+		Players.LocalPlayer:WaitForChild("ClientReady")
+		local reward = self:CalculateOfflineCashReward()
+		if reward > 0 then
+			self.Signals.UpdateCashLabel:Fire(reward)
+			self.PanelController:togglePanel("OfflineReward")
+		end
+	end)
 end
 
 return OfflineCashController

@@ -119,6 +119,17 @@ function StandService:removeBrainrot(standProfile: StandProfile, save: boolean?)
 end
 
 -- Public Methods
+function StandService:BrainrotIsPlaced(player: Player, brainrotReferenceId: string)
+	assert(isPlayer(player), "player arg must be a Player Instance")
+	assert(typeof(brainrotReferenceId) == "string", "brainrotReferenceId arg must be a string")
+	for standNumber: number, referenceId: string in pairs(self.DataService:GetValue(player, "TakenStands")) do
+		if referenceId == brainrotReferenceId then
+			return true
+		end
+	end
+	return false
+end
+
 function StandService:GetBrainrotsOnStand(player: Player)
 	assert(isPlayer(player), "player arg must be a Player Instance")
 

@@ -74,7 +74,7 @@ function ProfileStoreService:KnitInit()
 	print("ProfileStoreService Initiated.")
 	local profileTemplate = self.Config.DataTemplate
 
-	local profileStoreName = RunService:IsStudio() and `Test9` or HttpService:GenerateGUID(false)
+	local profileStoreName = RunService:IsStudio() and `Test9` or "Production"
 	self.ProfileStore = profileStore.New(profileStoreName, profileTemplate)
 end
 

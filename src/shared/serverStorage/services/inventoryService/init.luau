@@ -186,9 +186,7 @@ function InventoryService:LoadTools(player: Player)
 		} in
 			pairs(playerInventory)
 		do
-			if
-				data.Handler == "BrainrotTool" and self.StandService:GetStandFromBrainrotReferenceId(player, toolName)
-			then
+			if data.Handler == "BrainrotTool" and self.StandService:BrainrotIsPlaced(player, toolName) then
 				continue
 			end
 
