@@ -42,8 +42,10 @@ return {
 			[blocksConfig.DefaultBlock] = true,
 		},
 
+		PlotUpgradeLevel = 0,
 		ExtraPlotFloors = 0,
 		ExtraPlotStands = 0,
+
 		TakenStands = {},
 
 		MaxHold = {

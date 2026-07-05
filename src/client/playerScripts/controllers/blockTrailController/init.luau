@@ -210,7 +210,7 @@ function BlockTrailController:Connect(payload: { Asset: any, ZoneType: string, L
 	end
 
 	self.Connection = RunService.RenderStepped:Connect(function()
-		if self.WaitForEnoughBlocks == true or isDead() then
+		if self.WaitForEnoughBlocks == true or isDead() or self.ZoneController.Zone ~= "BlockTrail" then
 			return
 		end
 
@@ -256,6 +256,7 @@ function BlockTrailController:KnitInit()
 	self.BlockTrailService = knit.GetService("BlockTrailService")
 	self.DataController = knit.GetController("DataController")
 	self.NotificationController = knit.GetController("NotificationController")
+	self.ZoneController = knit.GetController("ZoneController")
 end
 
 function BlockTrailController:KnitStart()
@@ -275,6 +276,13 @@ function BlockTrailController:KnitStart()
 				humanoid.WalkSpeed = blocksConfig.DefaultWalkSpeed * blocksConfig.Blocks[newBlock].WalkSpeedMultiplier
 			end
 		end
+	end)
+
+	self.ZoneController.ZoneChanged:Connect(function(newZone: string)
+		if newZone == "BrainrotSpawn" or newZone == "BlockTrail" then
+			return
+		end
+		self:ClearLocalTrail()
 	end)
 end
 

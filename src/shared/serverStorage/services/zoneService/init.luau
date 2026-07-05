@@ -102,7 +102,7 @@ function ZoneService:listenToZoneEntriesAndExits(zone: BasePart)
 				LastZoneType = lastZoneType,
 			})
 
-			if lastZoneType == "BlockTrail" and zoneType == "SpawnArea" then
+			if zoneType == "SpawnArea" then
 				if not self.CarryService:PlayerIsCarrying(playerThatEntered) then
 					self.BlockTrailService:RefundBlocks(playerThatEntered)
 				else
@@ -154,10 +154,10 @@ function ZoneService:listenToZoneEntriesAndExits(zone: BasePart)
 			local oldProfile = self.PlayerProfiles[playerThatLeft]
 			local zoneType = zone:GetAttribute("ZoneType")
 			if not oldProfile or oldProfile.Asset ~= zone then
-				return
+				--return
 			end
 
-			local lastZoneType = oldProfile.ZoneType
+			local lastZoneType = oldProfile and oldProfile.ZoneType
 			self.PlayerProfiles[playerThatLeft] = nil
 
 			self.Client.LeftZone:Fire(playerThatLeft, {
@@ -187,7 +187,6 @@ function ZoneService:disconnectZone(zone: BasePart)
 
 	table.clear(zoneProfileReference.PlayersInZone)
 	table.clear(zoneProfileReference.Connections)
-
 	self.ZoneProfiles[zone] = nil
 end
 

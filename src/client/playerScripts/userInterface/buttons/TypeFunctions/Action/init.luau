@@ -18,6 +18,7 @@ local functions = {
 	PurchasePrompt = require(script.purchasePromptAction),
 	ClaimOfflineCash = require(script.claimOfflineCashAction),
 	ToggleIndexMutation = require(script.toggleIndexMutationAction),
+	UpgradePlot = require(script.upgradePlotAction),
 }
 
 return function(button)

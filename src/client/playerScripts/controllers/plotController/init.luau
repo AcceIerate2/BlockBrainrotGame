@@ -17,6 +17,15 @@ function PlotController:syncPlot()
 end
 
 -- Public Methods
+function PlotController:UpgradePlot()
+	self.PlotService
+		:UpgradePlot()
+		:andThen(function(response: { Status: boolean })
+			warn(response)
+		end)
+		:catch(warn)
+end
+
 function PlotController:GetSpawn()
 	return self.PlotAsset:WaitForChild("Spawn")
 end

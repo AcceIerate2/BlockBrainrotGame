@@ -32,6 +32,10 @@ local PlotService = knit.CreateService({
 })
 
 -- Client Exposed Methods
+function PlotService.Client:UpgradePlot(player: Player)
+	return self.Server:UpgradePlot(player)
+end
+
 function PlotService.Client:GetPlotAsset(player: Player)
 	return self.Server:GetPlotStateFromPlayer(player).Asset
 end
@@ -126,6 +130,10 @@ function PlotService:syncPlot(player: Player, plotState: PlotState): { () -> () 
 end
 
 -- Public Methods
+function PlotService:UpgradePlot(player: Player)
+	assert(isPlayer(player), "player arg must be a Player Instance")
+end
+
 function PlotService:AddStand(player: Player, shouldNotSave: boolean?)
 	assert(isPlayer(player), "player arg must be a Player Instance")
 

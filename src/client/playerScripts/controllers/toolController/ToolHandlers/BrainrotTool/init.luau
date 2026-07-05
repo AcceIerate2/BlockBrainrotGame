@@ -1,4 +1,5 @@
 -- Roblox Services
+local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 -- Packages
@@ -30,6 +31,11 @@ function BrainrotTool:equip(toolName: string)
 end
 
 function BrainrotTool:unequip()
+	local carriedBrainrotAssetToDestroy = workspace:FindFirstChild(`{Players.LocalPlayer.Name}_CarriedBrainrot`)
+	if carriedBrainrotAssetToDestroy then
+		carriedBrainrotAssetToDestroy:Destroy()
+	end
+
 	self.BrainrotToolService:HideBrainrot()
 	self.AnimationController:stop("FrontHold")
 end
