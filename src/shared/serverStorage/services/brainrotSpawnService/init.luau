@@ -160,6 +160,9 @@ function BrainrotSpawnService:SpawnBrainrot(brainrotSpawn, replace: boolean)
 	brainrotAsset:SetAttribute("State", "Idle")
 
 	local proximityPrompt = InstanceCreator("ProximityPrompt", "ProximityPrompt", brainrotAsset.PrimaryPart, {
+		ObjectText = `{mutation ~= "Default" and mutation .. " " or ""}{brainrotHandler.GetBrainrotDisplayName(
+			brainrotAsset.Name
+		)}`,
 		ActionText = "Pick Up",
 		HoldDuration = 0.5,
 	}) :: ProximityPrompt

@@ -51,6 +51,11 @@ function BrainrotUpgradeService:Upgrade(player: Player, brainrotReferenceId: str
 		_table[brainrotReferenceId].Level += 1
 	end)
 
+	local brainrotAsset = self.StandService:GetBrainrotAssetFromReferenceId(player, brainrotReferenceId)
+	if brainrotAsset then
+		brainrotHandler.UpdateLevel(brainrotAsset, brainrotReferenceId, currentLevel + 1, player)
+	end
+
 	return {
 		Status = true,
 		NewLevel = currentLevel + 1,
@@ -63,6 +68,7 @@ end
 function BrainrotUpgradeService:KnitInit()
 	self.DataService = knit.GetService("DataService")
 	self.CashService = knit.GetService("CashService")
+	self.StandService = knit.GetService("StandService")
 end
 
 return BrainrotUpgradeService

@@ -8,16 +8,9 @@ local mutationConfig = require(ReplicatedStorage.src.GameConfiguration.General.m
 -->
 return {
 	DataTemplate = {
-		Cash = 5000000,
+		Cash = 0,
 		Rebirths = 0,
-		Inventory = {
-			["67"] = {
-				Quantity = 1,
-				Handler = "BrainrotTool",
-				Mutation = "Default",
-				Level = 1,
-			},
-		},
+		Inventory = {},
 
 		Index = (function()
 			local _table = {}
@@ -28,12 +21,12 @@ return {
 		end)(),
 
 		Blocks = {
-			Value = 15,
+			Value = 20,
 			Level = 0,
 		},
 
 		MaxBlocks = {
-			Value = 15,
+			Value = 20,
 			Level = 0,
 		},
 

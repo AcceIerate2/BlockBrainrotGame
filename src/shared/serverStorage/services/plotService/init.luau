@@ -4,6 +4,12 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 -- Packages
 local knit = require(ReplicatedStorage.src.Packages.knit)
 
+-- Utility Modules
+local NumberShortner = require(ReplicatedStorage.src.utility.NumberShortner)
+
+-- Config Modules
+local plotConfig = require(ReplicatedStorage.src.GameConfiguration.General.plotConfig)
+
 -- Constants
 local Plots = workspace.src.Plots
 local PlotAssets = ReplicatedStorage.Assets.PlotAssets
@@ -132,9 +138,35 @@ end
 -- Public Methods
 function PlotService:UpgradePlot(player: Player)
 	assert(isPlayer(player), "player arg must be a Player Instance")
+
+	local plotUpgradeLevelValueObject = self.DataService:GetValueObject(player, "PlotUpgradeLevel")
+	local currentLevel = plotUpgradeLevelValueObject:Get()
+	if currentLevel >= plotConfig.MaxLevel then
+		return {
+			Status = false,
+			Reason = "Max Level",
+		}
+	end
+
+	local cost = plotConfig.CalculateUpgradeCost(currentLevel)
+	if not self.CashService:canAfford(player, cost) then
+		return {
+			Status = false,
+			Reason = `You need ${NumberShortner(cost - self.DataService:GetValue(player, "Cash"))} more!`,
+		}
+	end
+
+	self.CashService:manipulatePlayerCash(player, -cost, "Addition")
+	self:AddStand(player, false, true)
+
+	local newLevel = currentLevel + 1
+	plotUpgradeLevelValueObject:Set(newLevel)
+	return {
+		Status = true,
+	}
 end
 
-function PlotService:AddStand(player: Player, shouldNotSave: boolean?)
+function PlotService:AddStand(player: Player, shouldNotSave: boolean?, createFloorIfNeeded: boolean?)
 	assert(isPlayer(player), "player arg must be a Player Instance")
 
 	local playerFloors = self.DataService:GetValue(player, "ExtraPlotFloors") + 1
@@ -155,8 +187,12 @@ function PlotService:AddStand(player: Player, shouldNotSave: boolean?)
 	local floorIndex = math.ceil(newStandIndex / 8)
 
 	if floorIndex > playerFloors then
-		warn("Could not place new stand - not enough floors", newStandIndex)
-		return
+		if not createFloorIfNeeded then
+			warn("Could not place new stand - not enough floors", newStandIndex)
+			return
+		else
+			self:AddFloor(player, false)
+		end
 	end
 
 	local floorAsset = plotState.Asset.Floors:FindFirstChild(`Floor_{floorIndex}`)
@@ -299,6 +335,7 @@ function PlotService:KnitInit()
 	self.DataService = knit.GetService("DataService")
 	self.StandService = knit.GetService("StandService")
 	self.PlayerService = knit.GetService("PlayerService")
+	self.CashService = knit.GetService("CashService")
 end
 
 function PlotService:KnitStart()

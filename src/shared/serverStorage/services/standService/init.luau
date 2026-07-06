@@ -64,6 +64,7 @@ function StandService:placeBrainrot(standProfile: StandProfile, brainrotReferenc
 		true
 	)
 
+	brainrotHandler.UpdateLevel(standProfile.Brainrot, brainrotReferenceId, nil, standProfile.Owner)
 	brainrotHandler.ToggleCountdownState(standProfile.Brainrot, false)
 	standProfile.Taken = true
 
@@ -150,6 +151,24 @@ function StandService:GetBrainrotsOnStand(player: Player)
 	end
 
 	return brainrots
+end
+
+function StandService:GetBrainrotAssetFromReferenceId(player: Player, brainrotReferenceId: string)
+	assert(isPlayer(player), "player arg must be a Player Instance")
+	assert(typeof(brainrotReferenceId) == "string", "brainrotReferenceId arg must be a string")
+
+	for _, standProfile: StandProfile in pairs(self.Profiles) do
+		if
+			standProfile.Owner == player
+			and standProfile.Taken
+			and typeof(standProfile.Brainrot) == "Instance"
+			and standProfile.Brainrot.Name == brainrotReferenceId
+		then
+			return standProfile.Brainrot
+		end
+	end
+
+	return nil
 end
 
 function StandService:GetStandFromBrainrotReferenceId(player: Player, brainrotReferenceId: string)

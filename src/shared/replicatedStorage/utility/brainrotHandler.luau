@@ -178,7 +178,7 @@ function BrainrotHandler.UpdateLevel(
 		return
 	end
 
-	local level = newLevel or BrainrotHandler.GetLevelFromBrainrotReferenceId(brainrotReferenceId)
+	local level = newLevel or BrainrotHandler.GetLevelFromBrainrotReferenceId(brainrotReferenceId, player)
 	ui.Labels.Content.Level.Text = `Level {level}`
 	ui.Labels.Content.Income.Text =
 		`${NumberShortner(BrainrotHandler.GetBrainrotIncomeRate(brainrotReferenceId, level, player))}/s`

@@ -389,7 +389,7 @@ Common["BrriBrriBicus"] = {
 	IncomeRate = 10,
 	Rarity = "Common",
 	SpawnWeight = 50,
-	Icon = "rbxassetid:// ",
+	Icon = "rbxassetid://135369613991000",
 
 	AnimationIds = {
 		Idle = "rbxassetid://137403719232869",
