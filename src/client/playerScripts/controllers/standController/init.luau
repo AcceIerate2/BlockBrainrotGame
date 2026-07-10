@@ -8,10 +8,15 @@ local knit = require(ReplicatedStorage.src.Packages.knit)
 -- Utility Modules
 local partOfCharacter = require(ReplicatedStorage.src.utility.partOfCharacter)
 local NumberShortner = require(ReplicatedStorage.src.utility.NumberShortner)
+local PlayTween = require(ReplicatedStorage.src.utility.PlayTween)
 local brainrotHandler = require(ReplicatedStorage.src.utility.brainrotHandler)
+local particleEmitter = require(ReplicatedStorage.src.utility.particleEmitter)
+local InstanceCreator = require(ReplicatedStorage.src.utility.InstanceCreator)
 
 -- Constants
 local Player = Players.LocalPlayer
+local Particles = ReplicatedStorage:WaitForChild("Assets"):WaitForChild("Effects")
+local MoneyPickup = Particles:WaitForChild("MoneyPickup")
 
 -- Helper Functions
 local function getProximityPrompt(standAsset: any): ProximityPrompt
@@ -43,7 +48,7 @@ end
 -->
 local StandController = knit.CreateController({
 	Name = "StandController",
-	CashCollectCooldown = false,
+	CashCollectCooldowns = {},
 	CashCollectCooldownDuration = 0.35,
 
 	ConnectionProfiles = {},
@@ -64,6 +69,57 @@ function StandController:toggleStandCashVisibility(standAsset, visible: boolean)
 		end
 		ui.Enabled = visible
 	end
+end
+
+function StandController:effect(standAsset)
+	local brainrot = standAsset.Brainrot:FindFirstChildOfClass("Model")
+	if not brainrot then
+		return
+	end
+
+	local originalCFrame = brainrot:GetAttribute("DefaultCFrame")
+	if typeof(originalCFrame) ~= "CFrame" then
+		originalCFrame = brainrot.PrimaryPart.CFrame
+		brainrot:SetAttribute("DefaultCFrame", originalCFrame)
+	end
+
+	PlayTween(
+		brainrot.PrimaryPart,
+		TweenInfo.new(0.15, Enum.EasingStyle.Linear, Enum.EasingDirection.Out, 0, true, 0),
+		{
+			CFrame = originalCFrame * CFrame.new(0, 3, 0),
+		}
+	)
+
+	local highlightToDestroy = brainrot.PrimaryPart:FindFirstChildOfClass("Highlight")
+	if highlightToDestroy then
+		highlightToDestroy:Destroy()
+	end
+
+	local highlight = InstanceCreator("Highlight", "Highlight", brainrot.PrimaryPart, {
+		FillColor = Color3.fromRGB(157, 255, 0),
+		FillTransparency = 0.25,
+		OutlineTransparency = 1,
+	})
+
+	PlayTween(highlight, TweenInfo.new(0.2, Enum.EasingStyle.Linear, Enum.EasingDirection.Out, 0, false, 0), {
+		FillTransparency = 1,
+	}).Completed:Once(function()
+		highlight:Destroy()
+	end)
+
+	local cashCollector = standAsset:WaitForChild("CashCollector")
+	PlayTween(cashCollector, TweenInfo.new(0.15, Enum.EasingStyle.Linear, Enum.EasingDirection.Out, 0, true, 0), {
+		Size = Vector3.new(2.05, 0.475, 5.65) - Vector3.new(0, 0.3, 0),
+		Color = Color3.fromRGB(51, 90, 0),
+	}).Completed:Once(function()
+		cashCollector.Size = Vector3.new(2.05, 0.475, 5.65)
+		cashCollector.Color = Color3.fromRGB(92, 162, 0)
+	end)
+
+	particleEmitter(MoneyPickup, cashCollector)
+	self.AudioController:PlayAudio("CashStand", true, cashCollector)
+	self.AudioController:PlayAudio("Button", true, cashCollector)
 end
 
 function StandController:collectCash(standAsset)
@@ -93,15 +149,16 @@ function StandController:connectCashCollect(standAsset)
 				return
 			end
 
-			if self.CashCollectCooldown == true then
+			if self.CashCollectCooldowns[standAsset] == true then
 				return
 			end
 
-			self.CashCollectCooldown = true
+			self.CashCollectCooldowns[standAsset] = true
 			task.delay(self.CashCollectCooldownDuration, function()
-				self.CashCollectCooldown = false
+				self.CashCollectCooldowns[standAsset] = nil
 			end)
 
+			self:effect(standAsset)
 			self:collectCash(standAsset)
 		end)
 end
@@ -165,28 +222,34 @@ end
 
 -- Place/Remove
 function StandController:placed(standAsset, brainrotReferenceId: string)
+	local isLuckyBlock = brainrotReferenceId:find("LuckyBlock")
+
 	self:toggleStandProximityPromptVisibility(standAsset, true)
 	updateProximityPromptText("Remove", standAsset)
 
 	local brainrotDisplayName = brainrotHandler.GetBrainrotDisplayName(brainrotReferenceId)
 	updateProximityPromptObjectText(brainrotDisplayName, standAsset)
 
-	self:connectCashChangedSignal(standAsset)
-	self:toggleStandCashVisibility(standAsset, true)
-	self:connectCashCollect(standAsset)
-	self:connectUpgradeButton(standAsset)
+	if not isLuckyBlock then
+		self:connectCashChangedSignal(standAsset)
+		self:toggleStandCashVisibility(standAsset, true)
+		self:connectCashCollect(standAsset)
+		self:connectUpgradeButton(standAsset)
+	end
 
 	local brainrotAsset = standAsset.Brainrot:FindFirstChildOfClass("Model")
-	if brainrotAsset then
+	if brainrotAsset and not isLuckyBlock then
 		brainrotHandler.UpdateLevel(brainrotAsset, brainrotReferenceId)
 	end
 
 	self.SellController.RefreshBrainrots:Fire()
+	self.AudioController:PlayAudio("Place", true, brainrotAsset.PrimaryPart)
 end
 
 function StandController:removed(standAsset)
 	updateProximityPromptText("Place", standAsset)
 	updateProximityPromptObjectText("Empty", standAsset)
+
 	self:toggleStandProximityPromptVisibility(standAsset, false)
 
 	self:disconnectCashChangedSignal(standAsset)
@@ -195,6 +258,7 @@ function StandController:removed(standAsset)
 	self:disconnectUpgradeButton(standAsset)
 
 	self.SellController.RefreshBrainrots:Fire()
+	self.AudioController:PlayAudio("Equip", true, standAsset.ProximityPrompt)
 end
 
 function StandController:listenToService()
@@ -251,6 +315,7 @@ function StandController:KnitInit()
 	self.ButtonsController = knit.GetController("ButtonsController")
 	self.PlotController = knit.GetController("PlotController")
 	self.SellController = knit.GetController("SellController")
+	self.AudioController = knit.GetController("AudioController")
 end
 
 function StandController:KnitStart()

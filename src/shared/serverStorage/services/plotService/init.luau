@@ -80,8 +80,8 @@ function PlotService:syncPlot(player: Player, plotState: PlotState): { () -> () 
 	local callbackFunctions = {}
 
 	-- Load Overhead UI
-	-- plotAsset.OverheadUI.UI.Multiplier.Text = `Multi: 1x`
-	--[[plotAsset.OverheadUI.UI:FindFirstChild("Name").Text = `{player.DisplayName}`
+	plotAsset.OverheadUI.UI.Multiplier.Text = `Multi: x{self.DataService:GetValue(player, "CashMultiplier")}`
+	plotAsset.OverheadUI.UI:FindFirstChild("Name").Text = `{player.DisplayName}`
 	plotAsset.OverheadUI.UI.Avatar.Image = self.DataService:GetValue(player, "AvatarHeadshotAssetId") or "rbxassetid://"
 	plotAsset.OverheadUI.UI.Enabled = true
 
@@ -90,7 +90,7 @@ function PlotService:syncPlot(player: Player, plotState: PlotState): { () -> () 
 		plotAsset.OverheadUI.UI:FindFirstChild("Name").Text = "Empty"
 		plotAsset.OverheadUI.UI.Avatar.Image = ""
 		plotAsset.OverheadUI.UI.Enabled = false
-	end)]]
+	end)
 
 	-- Load Floors
 	local extraFloorAssets = {}
@@ -136,6 +136,13 @@ function PlotService:syncPlot(player: Player, plotState: PlotState): { () -> () 
 end
 
 -- Public Methods
+function PlotService:UpdateCashMultiplierLabel(player: Player)
+	assert(isPlayer(player), "player arg must be a Player Instance")
+	local plotState: PlotState = self:GetPlotStateFromPlayer(player) :: PlotState
+	local plotAsset = plotState.Asset
+	plotAsset.OverheadUI.UI.Multiplier.Text = `Multi: x{self.DataService:GetValue(player, "CashMultiplier")}`
+end
+
 function PlotService:UpgradePlot(player: Player)
 	assert(isPlayer(player), "player arg must be a Player Instance")
 

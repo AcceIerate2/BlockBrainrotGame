@@ -98,6 +98,9 @@ function BrainrotService:RngBrainrot(rarity: string)
 
 	local totalWeight = 0
 	for _, brainrotData in pairs(brainrots) do
+		if brainrotData.Excluded then
+			continue
+		end
 		totalWeight += brainrotData.SpawnWeight
 	end
 
@@ -110,6 +113,10 @@ function BrainrotService:RngBrainrot(rarity: string)
 	local currentWeight = 0
 
 	for brainrotName, brainrotData in pairs(brainrots) do
+		if brainrotData.Excluded then
+			continue
+		end
+
 		currentWeight += brainrotData.SpawnWeight
 
 		if randomWeight <= currentWeight then

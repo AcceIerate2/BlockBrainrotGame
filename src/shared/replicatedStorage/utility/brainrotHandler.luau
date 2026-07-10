@@ -227,7 +227,12 @@ function BrainrotHandler.AnimateBrainrot(brainrotAsset: any)
 	loadedAnimationTrack:Play()
 end
 
-function BrainrotHandler.GetBrainrotAsset(brainrotName: string, mutation: string, shouldClone: boolean)
+function BrainrotHandler.GetBrainrotAsset(
+	brainrotName: string,
+	mutation: string,
+	shouldClone: boolean,
+	skipUICreation: boolean?
+)
 	assert(typeof(brainrotName) == "string", "brainrotName arg must be a string")
 	assert(typeof(mutation) == "string", "mutation arg must be a string")
 
@@ -238,8 +243,10 @@ function BrainrotHandler.GetBrainrotAsset(brainrotName: string, mutation: string
 	if shouldClone then
 		brainrotAsset = brainrotAsset:Clone()
 		brainrotAsset:SetAttribute("DefaultScale", brainrotAsset:GetScale())
-		BrainrotHandler.AnimateBrainrot(brainrotAsset)
-		BrainrotHandler.AddUiHeader(brainrotAsset, mutation)
+		if not skipUICreation then
+			BrainrotHandler.AnimateBrainrot(brainrotAsset)
+			BrainrotHandler.AddUiHeader(brainrotAsset, mutation)
+		end
 	end
 
 	return brainrotAsset

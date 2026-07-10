@@ -3,11 +3,13 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
 -- Packages
+local luckyBlocksConfig = require(ReplicatedStorage.src.GameConfiguration.General.luckyBlocksConfig)
 local knit = require(ReplicatedStorage.src.Packages.knit)
 
 -- Utility Modules
 local InstanceCreator = require(ReplicatedStorage.src.utility.InstanceCreator)
 local brainrotHandler = require(ReplicatedStorage.src.utility.brainrotHandler)
+local luckyBlockHandler = require(ReplicatedStorage.src.utility.luckyBlockHandler)
 
 -- Constants
 local BrainrotSpawns = workspace.src.BrainrotSpawns
@@ -15,13 +17,15 @@ local BrainrotSpawns = workspace.src.BrainrotSpawns
 -- Types
 type ZoneProfile = {
 	Brainrots: { any },
+	CFrames: { CFrame },
 }
 
 -->
 local BrainrotSpawnService = knit.CreateService({
 	Name = "BrainrotSpawnService",
 	MaxBrainrotsPerZone = 10,
-	BrainrotLifeTimeDuration = 60,
+	BrainrotLifeTimeDuration = 10,
+	LuckyBlockLifeTimeDuration = 90,
 	ZoneProfiles = {},
 
 	Client = {},
@@ -95,8 +99,12 @@ function BrainrotSpawnService:preloadBrainrotSpawns()
 			CFrames = {},
 		}
 
-		for i = self.MaxBrainrotsPerZone, 1, -1 do
+		for i = self.MaxBrainrotsPerZone - 3, 1, -1 do
 			self:SpawnBrainrot(brainrotSpawn, true)
+		end
+
+		for i = 3, 1, -1 do
+			self:SpawnLuckyBlock(brainrotSpawn, true)
 		end
 	end
 end
@@ -121,6 +129,17 @@ function BrainrotSpawnService:DestroyBrainrot(brainrotAsset)
 		end
 	end
 
+	local zoneProfile: ZoneProfile = self.ZoneProfiles[profileReference.BrainrotSpawn] :: ZoneProfile
+	if typeof(zoneProfile) == "table" then
+		local originalCFrame = brainrotAsset:GetAttribute("OriginalCFrame")
+		if typeof(originalCFrame) == "CFrame" then
+			local index = table.find(zoneProfile.CFrames, originalCFrame)
+			if index then
+				table.remove(zoneProfile.CFrames, index)
+			end
+		end
+	end
+
 	table.clear(profileReference.Connections)
 	profileReference.ProximityPrompt:Destroy()
 	brainrotAsset:Destroy()
@@ -135,7 +154,13 @@ end
 function BrainrotSpawnService:BrainrotDropped(brainrotAsset)
 	local profile = self:getBrainrotProfile(brainrotAsset)
 	profile.State = "Idle"
-	brainrotHandler.ToggleCountdownState(brainrotAsset, true)
+
+	if brainrotAsset:GetAttribute("Type") == "Brainrot" then
+		brainrotHandler.ToggleCountdownState(brainrotAsset, true)
+	elseif brainrotAsset:GetAttribute("Type") == "LuckyBlock" then
+		luckyBlockHandler.ToggleCountdownState(brainrotAsset, true)
+	end
+
 	brainrotAsset:SetAttribute("State", "Idle")
 end
 
@@ -154,6 +179,7 @@ function BrainrotSpawnService:SpawnBrainrot(brainrotSpawn, replace: boolean)
 	brainrotAsset:SetAttribute("OriginalCFrame", cFrame)
 	brainrotAsset:SetAttribute("Mutation", mutation)
 	brainrotAsset:SetAttribute("DefaultScale", brainrotAsset:GetScale())
+	brainrotAsset:SetAttribute("Type", "Brainrot")
 
 	local expiresAt = os.time() + self.BrainrotLifeTimeDuration
 	brainrotAsset:SetAttribute("ExpiresAt", expiresAt)
@@ -222,10 +248,90 @@ function BrainrotSpawnService:SpawnBrainrot(brainrotSpawn, replace: boolean)
 	brainrotAsset.Parent = brainrotSpawn.Brainrots
 end
 
+function BrainrotSpawnService:SpawnLuckyBlock(brainrotSpawn, replace: boolean)
+	local rarity = brainrotSpawn.Name
+
+	local zoneProfile = self:getZoneProfile(brainrotSpawn) :: ZoneProfile
+	local luckyBlockAsset = self.LuckyBlockService:GetBlockAsset(luckyBlocksConfig.Rarities[rarity], true)
+
+	local cFrame = self:getCFrame(brainrotSpawn.Base, luckyBlockAsset, zoneProfile.CFrames)
+	table.insert(zoneProfile.CFrames, cFrame)
+
+	luckyBlockAsset:PivotTo(cFrame)
+	luckyBlockAsset:SetAttribute("OriginalCFrame", cFrame)
+	luckyBlockAsset:SetAttribute("Type", "LuckyBlock")
+	luckyBlockAsset:SetAttribute("Level", math.random(1, 10))
+
+	local expiresAt = os.time() + self.LuckyBlockLifeTimeDuration
+	luckyBlockAsset:SetAttribute("ExpiresAt", expiresAt)
+	luckyBlockAsset:SetAttribute("State", "Idle")
+
+	local proximityPrompt = InstanceCreator("ProximityPrompt", "ProximityPrompt", luckyBlockAsset.PrimaryPart, {
+		ObjectText = `{luckyBlockHandler.GetDisplayNameFromReferenceId(luckyBlockAsset.Name)}`,
+		ActionText = "Pick Up",
+		HoldDuration = 0.5,
+	}) :: ProximityPrompt
+
+	zoneProfile.Brainrots[luckyBlockAsset] = {
+		BrainrotSpawn = brainrotSpawn,
+		State = "Idle",
+		SecondsLeft = self.LuckyBlockLifeTimeDuration,
+		ProximityPrompt = proximityPrompt,
+		Connections = {},
+	}
+
+	local profileReference = zoneProfile.Brainrots[luckyBlockAsset]
+	table.insert(
+		profileReference.Connections,
+		proximityPrompt.Triggered:Connect(function(playerWhoTriggered: Player)
+			if profileReference.State ~= "Idle" then
+				return
+			end
+
+			luckyBlockAsset:SetAttribute("State", "Carrying")
+
+			profileReference.State = "Carrying"
+			proximityPrompt.Enabled = false
+
+			luckyBlockHandler.ToggleCountdownState(luckyBlockAsset, false)
+			self.CarryService:Carry(playerWhoTriggered, luckyBlockAsset)
+		end)
+	)
+
+	local elapsed = 0
+	table.insert(
+		profileReference.Connections,
+		RunService.Heartbeat:Connect(function(deltaTime: number)
+			if elapsed < 1 then
+				elapsed += deltaTime
+				return
+			end
+
+			if profileReference.State ~= "Idle" then
+				return
+			end
+
+			proximityPrompt.Enabled = true
+
+			elapsed = 0
+			profileReference.SecondsLeft -= 1
+			if profileReference.SecondsLeft < 1 then
+				self:DestroyBrainrot(luckyBlockAsset)
+				if replace then
+					self:SpawnLuckyBlock(brainrotSpawn, true)
+				end
+			end
+		end)
+	)
+
+	luckyBlockAsset.Parent = brainrotSpawn.Brainrots
+end
+
 -- LifeCycle
 function BrainrotSpawnService:KnitInit()
 	self.BrainrotService = knit.GetService("BrainrotService")
 	self.CarryService = knit.GetService("CarryService")
+	self.LuckyBlockService = knit.GetService("LuckyBlockService")
 end
 
 function BrainrotSpawnService:KnitStart()

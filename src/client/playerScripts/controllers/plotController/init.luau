@@ -79,6 +79,8 @@ function PlotController:KnitInit()
 	self.NotificationController = knit.GetController("NotificationController")
 
 	self:syncPlot()
+	self.PlotAsset:WaitForChild("OverheadUI"):WaitForChild("UI"):WaitForChild("Name").Text = `Your Plot`
+
 	self:connectUpgradeButton()
 end
 

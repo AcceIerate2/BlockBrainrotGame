@@ -47,7 +47,6 @@ end
 function ZoneService:playerInZone(zoneProfile: ZoneProfile, player: Player): number?
 	assert(typeof(zoneProfile) == "table", "zoneProfile arg must be a table")
 	assert(isPlayer(player), "player arg must be a Player Instance")
-
 	return table.find(zoneProfile.PlayersInZone, player)
 end
 
@@ -111,8 +110,11 @@ function ZoneService:listenToZoneEntriesAndExits(zone: BasePart)
 						local newGuid = HttpService:GenerateGUID(false)
 						local referenceId = `{brainrotData.Name}_{newGuid}`
 						self.InventoryService:Give(playerThatEntered, referenceId, "BrainrotTool", {
-							Mutation = brainrotData.Mutation or "Default",
-							Level = 1,
+							Mutation = not brainrotData.Name:find("LuckyBlock")
+									and (brainrotData.Mutation or "Default")
+								or nil,
+							Level = not brainrotData.Name:find("LuckyBlock") and 1,
+							Type = brainrotData.Name:find("LuckyBlock") and "LuckyBlock" or "Brainrot",
 						})
 
 						if _index == 1 then

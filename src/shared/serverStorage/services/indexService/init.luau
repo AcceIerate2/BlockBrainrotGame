@@ -51,8 +51,8 @@ end
 function IndexService:Sync(player: Player)
 	assert(isPlayer(player), "player arg must be a Player Instance")
 	local playerInventory = self.DataService:GetValue(player, "Inventory")
-	for referenceId: string, data: { Handler: string, Mutation: string } in pairs(playerInventory) do
-		if data.Handler ~= "BrainrotTool" then
+	for referenceId: string, data: { Handler: string, Mutation: string, Type: string } in pairs(playerInventory) do
+		if data.Handler ~= "BrainrotTool" or data.Type ~= "Brainrot" then
 			continue
 		end
 

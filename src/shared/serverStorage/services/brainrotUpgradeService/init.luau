@@ -3,6 +3,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 -- Packages
 local knit = require(ReplicatedStorage.src.Packages.knit)
+local NumberShortner = require(ReplicatedStorage.src.utility.NumberShortner)
 
 -- Utility Modules
 local brainrotHandler = require(ReplicatedStorage.src.utility.brainrotHandler)
@@ -42,7 +43,7 @@ function BrainrotUpgradeService:Upgrade(player: Player, brainrotReferenceId: str
 	if not self.CashService:canAfford(player, costToUpgrade) then
 		return {
 			Status = false,
-			Reason = "You can't afford this!",
+			Reason = `You need ${NumberShortner(costToUpgrade - self.DataService:GetValue(player, "Cash"))} more!`,
 		}
 	end
 

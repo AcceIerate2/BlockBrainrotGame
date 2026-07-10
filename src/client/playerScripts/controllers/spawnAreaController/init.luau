@@ -10,9 +10,7 @@ local SpawnAreaController = knit.CreateController({
 })
 
 -- Pubic Methods
-function SpawnAreaController:Connect(payload: { Asset: any, ZoneType: string, LastZoneType: string })
-	self.BlockTrailController:ClearLocalTrail()
-end
+function SpawnAreaController:Connect(payload: { Asset: any, ZoneType: string, LastZoneType: string }) end
 
 function SpawnAreaController:Disconnect() end
 

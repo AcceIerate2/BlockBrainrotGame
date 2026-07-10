@@ -21,12 +21,14 @@ local BrainrotTool = {
 }
 
 -- Private Methods
-function BrainrotTool:equip(toolName: string)
+function BrainrotTool:equip(toolName: string, type: string)
 	assert(typeof(toolName) == "string", "toolName arg must be a string")
+	assert(typeof(type) == "string", "type arg must be a string")
+
 	self:unequip()
 
-	local mutation = brainrotHandler.GetMutationFromBrainrotReferenceId(toolName)
-	self.BrainrotToolService:ShowBrainrot(toolName, mutation)
+	local mutation = type == "Brainrot" and brainrotHandler.GetMutationFromBrainrotReferenceId(toolName)
+	self.BrainrotToolService:ShowBrainrot(toolName, mutation, type)
 	self.AnimationController:play("FrontHold")
 end
 
@@ -48,8 +50,13 @@ function BrainrotTool:Bind(tool: Tool)
 		connections,
 		tool.Equipped:Connect(function()
 			self.StandController:ToggleProximityPromptVisibility(true)
-			self.BrainrotGiftController:ToggleGiftProximityPrompts(true, tool.Name, tool:GetAttribute("Mutation"))
-			self:equip(tool.Name)
+			self.BrainrotGiftController:ToggleGiftProximityPrompts(
+				true,
+				tool.Name,
+				tool:GetAttribute("Mutation"),
+				tool:GetAttribute("Type")
+			)
+			self:equip(tool.Name, tool:GetAttribute("Type"))
 		end)
 	)
 

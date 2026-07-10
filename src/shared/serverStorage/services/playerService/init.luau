@@ -50,6 +50,9 @@ function PlayerService:load(player: Player)
 	-- PlotService
 	playerDisconnectFunctions.playerServiceDisconnectFunction = self.PlotService:ConnectPlot(player)
 
+	-- LuckyBlockService
+	playerDisconnectFunctions.luckyBlockServiceDisconnectFunction = self.LuckyBlockService:ConnectPlayer(player)
+
 	-- CarryService
 	playerDisconnectFunctions.carryServiceDisconnectFunction = self.CarryService:Connect(player)
 
@@ -64,6 +67,8 @@ function PlayerService:load(player: Player)
 
 	-- CharacterAdded Connection
 	local function characterAdded(Character: Model)
+		self.BlockTrailService:RefundBlocks(player, true)
+
 		CollisionHandler.ToggleCollisionProperties(Character, {
 			CollisionGroup = "PlayerCollisions",
 		}, {})
@@ -85,6 +90,7 @@ end
 function PlayerService:unload(player: Player)
 	self.BlockTrailService:ClearBlocks(player)
 	self.OfflineCashService:ClearPlayerReferences(player)
+	self.ConfirmationService:DisconnectPlayer(player)
 
 	local playerDisconnectFunctions = self.DisconnectFunctions[player]
 	if not TypeCheck.table(playerDisconnectFunctions) then
@@ -117,6 +123,8 @@ function PlayerService:KnitInit()
 	self.CarryService = knit.GetService("CarryService")
 	self.IndexService = knit.GetService("IndexService")
 	self.OfflineCashService = knit.GetService("OfflineCashService")
+	self.LuckyBlockService = knit.GetService("LuckyBlockService")
+	self.ConfirmationService = knit.GetService("ConfirmationService")
 
 	-- Player Connections
 	Players.PlayerAdded:Connect(function(player: Player)
@@ -134,8 +142,6 @@ function PlayerService:KnitInit()
 			self:unload(player)
 		end
 	end)
-
-	print(`PlayerService Initiated.`)
 end
 
 function PlayerService:KnitStart()

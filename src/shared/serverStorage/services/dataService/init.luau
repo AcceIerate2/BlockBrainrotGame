@@ -41,7 +41,7 @@ end
 function DataService:GetValueObject(player: Player, valueName: string)
 	assert(typeof(player) == "Instance", "player arg must be a player")
 	local playerData = self:GetProfile(player)
-	return playerData[valueName]
+	return playerData and playerData[valueName]
 end
 
 function DataService:GetProfile(player: Player)

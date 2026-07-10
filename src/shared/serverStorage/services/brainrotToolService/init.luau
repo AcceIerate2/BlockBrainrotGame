@@ -3,10 +3,12 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 -- Packages
+local luckyBlocksConfig = require(ReplicatedStorage.src.GameConfiguration.General.luckyBlocksConfig)
 local knit = require(ReplicatedStorage.src.Packages.knit)
 
 -- Utility Modules
 local brainrotHandler = require(ReplicatedStorage.src.utility.brainrotHandler)
+local luckyBlockHandler = require(ReplicatedStorage.src.utility.luckyBlockHandler)
 
 -- Helper Functions
 local function isPlayer(player: Player?): boolean
@@ -55,8 +57,13 @@ local BrainrotToolService = knit.CreateService({
 })
 
 -- Client Exposed Methods
-function BrainrotToolService.Client:ShowBrainrot(player: Player, brainrotReferenceId: string, mutation: string)
-	return self.Server:ShowBrainrot(player, brainrotReferenceId, mutation)
+function BrainrotToolService.Client:ShowBrainrot(
+	player: Player,
+	brainrotReferenceId: string,
+	mutation: string,
+	_type: string
+)
+	return self.Server:ShowBrainrot(player, brainrotReferenceId, mutation, _type)
 end
 
 function BrainrotToolService.Client:HideBrainrot(player: Player)
@@ -74,10 +81,9 @@ function BrainrotToolService:HideBrainrot(player: Player)
 	end
 end
 
-function BrainrotToolService:ShowBrainrot(player: Player, brainrotReferenceId: string, mutation: string)
+function BrainrotToolService:ShowBrainrot(player: Player, brainrotReferenceId: string, mutation: string, _type: string)
 	assert(isPlayer(player), "player arg must be a Player Instance")
 	assert(typeof(brainrotReferenceId) == "string", "brainrotReferenceId arg must be a string")
-	assert(typeof(mutation) == "string", "mutation arg must be a string")
 
 	local character = player.Character
 	if not character then
@@ -103,40 +109,47 @@ function BrainrotToolService:ShowBrainrot(player: Player, brainrotReferenceId: s
 	self:HideBrainrot(player)
 
 	local brainrotName = brainrotHandler.GetBrainrotNameFromReferenceId(brainrotReferenceId)
-
-	local brainrotAsset = brainrotHandler.GetBrainrotAsset(brainrotName, mutation, true)
-	if not brainrotAsset then
+	local asset = _type == "LuckyBlock"
+			and self.LuckyBlockService:GetBlockAsset(
+				luckyBlocksConfig.Rarities[luckyBlockHandler.GetRarityFromName(brainrotReferenceId)],
+				true
+			)
+		or brainrotHandler.GetBrainrotAsset(brainrotName, mutation, true)
+	if not asset then
 		return
 	end
 
-	brainrotHandler.UpdateLevel(
-		brainrotAsset,
-		brainrotReferenceId,
-		brainrotHandler.GetLevelFromBrainrotReferenceId(brainrotReferenceId, player),
-		player
-	)
+	if _type == "Brainrot" then
+		brainrotHandler.UpdateLevel(
+			asset,
+			brainrotReferenceId,
+			brainrotHandler.GetLevelFromBrainrotReferenceId(brainrotReferenceId, player),
+			player
+		)
+		brainrotHandler.ToggleCountdownState(asset, false)
+	else
+		luckyBlockHandler.ToggleCountdownState(asset, false)
+	end
 
-	brainrotHandler.ToggleCountdownState(brainrotAsset, false)
-
-	local mainPart = getMainPart(brainrotAsset)
+	local mainPart = getMainPart(asset)
 	if not mainPart then
-		brainrotAsset:Destroy()
+		asset:Destroy()
 		return
 	end
 
-	brainrotAsset.PrimaryPart = mainPart
-	brainrotAsset.Name = player.Name .. "_CarriedBrainrot"
+	asset.PrimaryPart = mainPart
+	asset.Name = player.Name .. "_CarriedBrainrot"
 
-	setPhysics(brainrotAsset)
-	weldModel(brainrotAsset, mainPart)
+	setPhysics(asset)
+	weldModel(asset, mainPart)
 
-	local extentsSize = brainrotAsset:GetExtentsSize()
+	local extentsSize = asset:GetExtentsSize()
 
 	-- Simple server offset math.
 	local carryCFrame = upperTorso.CFrame * CFrame.new(0, 0, -1.25) * CFrame.new(0, 0, -(extentsSize.Z / 2))
 
-	brainrotAsset:PivotTo(carryCFrame)
-	brainrotAsset.Parent = workspace
+	asset:PivotTo(carryCFrame)
+	asset.Parent = workspace
 
 	local carryWeld = Instance.new("WeldConstraint")
 	carryWeld.Name = "BrainrotCarryWeld"
@@ -148,12 +161,13 @@ function BrainrotToolService:ShowBrainrot(player: Player, brainrotReferenceId: s
 		mainPart:SetNetworkOwner(player)
 	end)
 
-	self.CarriedBrainrots[player] = brainrotAsset
+	self.CarriedBrainrots[player] = asset
 end
 
 -- LifeCycle
 function BrainrotToolService:KnitInit()
 	self.DataService = knit.GetService("DataService")
+	self.LuckyBlockService = knit.GetService("LuckyBlockService")
 end
 
 function BrainrotToolService:KnitStart()

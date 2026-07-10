@@ -616,4 +616,43 @@ Common["HotSpotBurittini"] = {
 	},
 }
 
+Common["ChimpanziniBananini@Pack2"] = {
+	IncomeRate = 10,
+	Rarity = "Common",
+	SpawnWeight = 50,
+	Icon = "rbxassetid://138757943740429",
+
+	AnimationIds = {
+		Idle = "rbxassetid://81946260039921",
+	},
+
+	Excluded = true,
+}
+
+Common["LaGrandeCombinasion@Pack2"] = {
+	IncomeRate = 10,
+	Rarity = "Common",
+	SpawnWeight = 50,
+	Icon = "rbxassetid://107197418866574",
+
+	AnimationIds = {
+		Idle = "rbxassetid://106958371284722",
+	},
+
+	Excluded = true,
+}
+
+Common["Ben@Pack2"] = {
+	IncomeRate = 10,
+	Rarity = "Common",
+	SpawnWeight = 50,
+	Icon = "rbxassetid://130073614253445",
+
+	AnimationIds = {
+		Idle = "rbxassetid://120077206233820",
+	},
+
+	Excluded = true,
+}
+
 return Common

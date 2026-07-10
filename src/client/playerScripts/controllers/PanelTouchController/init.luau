@@ -7,6 +7,7 @@ local knit = require(ReplicatedStorage.src.Packages.knit)
 
 -- Utility Modules
 local partOfCharacter = require(ReplicatedStorage.src.utility.partOfCharacter)
+local brainrotHandler = require(ReplicatedStorage.src.utility.brainrotHandler)
 
 -- Constants
 local Panels = {
@@ -76,6 +77,18 @@ function PanelTouchController:KnitStart()
 				end
 			end
 		end)
+	end
+
+	for _, standAsset in pairs(workspace:WaitForChild("src"):WaitForChild("Stands"):GetChildren()) do
+		local brainrot
+		for _, v in pairs(standAsset:GetChildren()) do
+			if v:IsA("Model") and v:FindFirstChildOfClass("AnimationController") then
+				brainrot = v
+				break
+			end
+		end
+
+		brainrotHandler.AnimateBrainrot(brainrot)
 	end
 end
 

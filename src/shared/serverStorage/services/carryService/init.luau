@@ -62,7 +62,7 @@ local function connectAlignPosition(
 		Attachment1 = headAttachment,
 		MaxForce = math.huge,
 		Responsiveness = 200,
-		MaxTorque = math.huge,
+		MaxVelocity = math.huge,
 		Enabled = true,
 	}) :: AlignPosition
 end
@@ -85,9 +85,8 @@ local function connectAlignOrientation(
 	return InstanceCreator("AlignOrientation", "AlignOrientation", parent, {
 		Attachment0 = meshPartAttachment,
 		Attachment1 = headAttachment,
-		MaxForce = math.huge,
-		Responsiveness = 200,
 		MaxTorque = math.huge,
+		Responsiveness = 200,
 		Enabled = true,
 	}) :: AlignOrientation
 end

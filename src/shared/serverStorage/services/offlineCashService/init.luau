@@ -49,6 +49,9 @@ function OfflineCashService:CalculateOfflineCashReward(player: Player): number
 	local brainrots =
 		self.StandService:GetBrainrotsOnStand(player) :: { { BrainrotReferenceId: string, Mutation: string } }
 	for _, brainrotConfig in pairs(brainrots) do
+		if brainrotConfig.BrainrotReferenceId:find("LuckyBlock") then
+			continue
+		end
 		local income = brainrotHandler.GetBrainrotIncomeRate(brainrotConfig.BrainrotReferenceId, nil, player)
 		totalIncome += income
 	end

@@ -99,6 +99,10 @@ function InventoryService:GiveTool(player: Player, toolReferenceId: string, hand
 	assert(typeof(toolReferenceId) == "string", "toolReferenceId arg must be a string")
 	local tool = self.Utility:CreateTool(toolReferenceId, handler) :: Tool
 	tool.Name = toolReferenceId
+
+	local isLuckyBlock = toolReferenceId:find("LuckyBlock")
+	tool:SetAttribute("Type", isLuckyBlock and "LuckyBlock" or "Brainrot")
+
 	tool.Parent = player.Backpack
 	return tool
 end
@@ -132,7 +136,13 @@ function InventoryService:Remove(player: Player, toolName: string)
 	return quantity
 end
 
-function InventoryService:Give(player: Player, toolName: string, handler: string, customData: { [string]: any })
+function InventoryService:Give(
+	player: Player,
+	toolName: string,
+	handler: string,
+	customData: { [string]: any },
+	dontGiveTool: boolean?
+)
 	local dataToInsert = {
 		Quantity = 1,
 		Handler = handler,
@@ -154,17 +164,18 @@ function InventoryService:Give(player: Player, toolName: string, handler: string
 	self.Client.toolAdded:Fire(player, dataToInsert)
 	self.InventoryChanged:Fire(player, inventoryValueObject:Get())
 
-	if handler == "BrainrotTool" then
+	if handler == "BrainrotTool" and customData.Type == "Brainrot" then
 		self.IndexService:AddBrainrot(player, toolName, typeof(customData) == "table" and customData.Mutation)
 	end
 
-	if self.Utility:ToolExistsInPlayerOrCharacter(player, toolName) then
+	if self.Utility:ToolExistsInPlayerOrCharacter(player, toolName) or dontGiveTool then
 		return
 	end
 
 	local tool = self.Utility:CreateTool(toolName, handler)
 	if handler == "BrainrotTool" then
 		tool:SetAttribute("Mutation", customData.Mutation)
+		tool:SetAttribute("Type", customData.Type)
 	end
 
 	tool.Parent = player.Backpack
@@ -179,22 +190,26 @@ function InventoryService:LoadTools(player: Player)
 	local function load()
 		local playerInventory = self:GetPlayerInventoryValueObject(player):Get()
 
-		for toolName: string, data: {
+		for
+			toolName: string,
+			data: {
 			Quantity: number,
 			Handler: string,
 			Mutation: string?,
-		} in
-			pairs(playerInventory)
-		do
+			Type: string?,
+			ExpiresAt: string?,
+		}
+		in pairs(playerInventory) do
 			if data.Handler == "BrainrotTool" and self.StandService:BrainrotIsPlaced(player, toolName) then
+				warn(data.ExpiresAt)
 				continue
 			end
 
 			local tool = self.Utility:CreateTool(toolName, data.Handler)
 			if data.Handler == "BrainrotTool" then
 				tool:SetAttribute("Mutation", data.Mutation)
+				tool:SetAttribute("Type", data.Type)
 			end
-
 			tool.Parent = player.Backpack
 		end
 	end

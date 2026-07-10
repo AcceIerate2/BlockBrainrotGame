@@ -67,8 +67,6 @@ function NotificationController:Push(notificationData)
 	end)
 end
 
-function NotificationController:KnitInit()
-	print("NotificationController Initiated.")
-end
+function NotificationController:KnitInit() end
 
 return NotificationController

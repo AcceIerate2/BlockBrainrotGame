@@ -8,12 +8,15 @@ local knit = require(ReplicatedStorage.src.Packages.knit)
 
 -- Config Modules
 local blocksConfig = require(ReplicatedStorage.src.GameConfiguration.General.blocksConfig)
+local Spring = require(ReplicatedStorage.src.utility.Spring)
+local partOfCharacter = require(ReplicatedStorage.src.utility.partOfCharacter)
 
 -- Constants
 local Player = Players.LocalPlayer
 local BlockAssets = ReplicatedStorage:WaitForChild("Assets"):WaitForChild("Blocks")
 local CellSize = 4
 local BlockHeight = 4
+local MainGate = workspace:WaitForChild("src"):WaitForChild("MainGate")
 
 -- Helper Functions
 local function isDead(): boolean
@@ -150,6 +153,23 @@ function BlockTrailController:place(zone: Instance, cellX: number, cellZ: number
 	blockAsset.CanCollide = true
 	blockAsset:PivotTo(blockCFrame)
 	blockAsset.Parent = workspace
+	blockAsset.Transparency = 1
+
+	self.AudioController:PlayAudio("BlockPlace", true, blockAsset)
+	local tempBlockAsset = blockAsset:Clone()
+	tempBlockAsset.Transparency = 0
+	tempBlockAsset.CanCollide = false
+	tempBlockAsset.Parent = workspace
+	tempBlockAsset.Size = Vector3.new(2, 2, 2)
+	Spring.target(tempBlockAsset, 0.5, 6, {
+		Size = Vector3.new(4, 4, 4),
+	})
+
+	Spring.completed(tempBlockAsset, function()
+		tempBlockAsset.Size = Vector3.new(4, 4, 4)
+		tempBlockAsset:Destroy()
+		blockAsset.Transparency = 0
+	end)
 
 	self.PlacedBlocks[trailIndex] = blockAsset
 	self.PlacedCells[cellKey] = trailIndex
@@ -257,11 +277,34 @@ function BlockTrailController:KnitInit()
 	self.DataController = knit.GetController("DataController")
 	self.NotificationController = knit.GetController("NotificationController")
 	self.ZoneController = knit.GetController("ZoneController")
+	self.PanelController = knit.GetController("PanelController")
+	self.AudioController = knit.GetController("AudioController")
 end
 
 function BlockTrailController:KnitStart()
+	local function characterInZones(character): { string }
+		local zones = {} :: { string }
+		for _, limb in pairs(character:GetChildren()) do
+			if not limb:IsA("BasePart") then
+				continue
+			end
+
+			local partsInPart = workspace:GetPartsInPart(limb)
+			for _, partInPart in pairs(partsInPart) do
+				if partInPart:HasTag("Zone") then
+					if not table.find(zones, partInPart:GetAttribute("ZoneType")) then
+						table.insert(zones, partInPart:GetAttribute("ZoneType"))
+					end
+				end
+			end
+		end
+		return zones
+	end
+
 	local function update(remainingBlocks: number)
 		self.WaitForEnoughBlocks = remainingBlocks < 1 or false
+		local zones = characterInZones(Player.Character)
+		MainGate.CanCollide = self.WaitForEnoughBlocks and not table.find(zones or {}, "BlockTrail") or false
 	end
 
 	update(self.DataController:GetValue("Blocks").Value)
@@ -279,10 +322,42 @@ function BlockTrailController:KnitStart()
 	end)
 
 	self.ZoneController.ZoneChanged:Connect(function(newZone: string)
-		if newZone == "BrainrotSpawn" or newZone == "BlockTrail" then
+		update(self.DataController:GetValue("Blocks").Value)
+	end)
+
+	self.BlockTrailService.ClearLocalTrail:Connect(function()
+		self:ClearLocalTrail()
+	end)
+
+	local debounce = false
+	MainGate.Touched:Connect(function(partThatTouched: BasePart)
+		local playerThatTouched = Players:GetPlayerFromCharacter(partOfCharacter(partThatTouched))
+		if playerThatTouched ~= Player then
 			return
 		end
-		self:ClearLocalTrail()
+
+		if debounce or not self.WaitForEnoughBlocks then
+			return
+		end
+
+		debounce = true
+		task.delay(1, function()
+			debounce = false
+		end)
+
+		if table.find(characterInZones(Player.Character) or {}, "BlockTrail") then
+			return
+		end
+
+		self.NotificationController:Push({
+			Message = "You don't have any blocks!",
+			Color = Color3.fromRGB(255, 166, 0),
+			Sound = "Generic",
+		})
+
+		if self.PanelController.ActivePanel ~= "Upgrades" then
+			self.PanelController:togglePanel("Upgrades")
+		end
 	end)
 end
 

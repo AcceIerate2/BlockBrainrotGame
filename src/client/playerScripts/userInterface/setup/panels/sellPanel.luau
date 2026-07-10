@@ -77,6 +77,10 @@ end
 function SellPanel:refreshBrainrots()
 	self:clearCards()
 	for _, brainrotReferenceId: string in pairs(self.SellController:GetInactiveBrainrots()) do
+		local isLuckyBlock = brainrotReferenceId:find("Lucky")
+		if isLuckyBlock then
+			continue
+		end
 		self:newCard(brainrotReferenceId)
 	end
 end

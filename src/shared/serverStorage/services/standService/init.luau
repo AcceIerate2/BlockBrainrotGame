@@ -8,6 +8,10 @@ local promise = require(ReplicatedStorage.src.Packages.promise)
 
 -- Utility Modules
 local brainrotHandler = require(ReplicatedStorage.src.utility.brainrotHandler)
+local luckyBlockHandler = require(ReplicatedStorage.src.utility.luckyBlockHandler)
+
+-- Config Modules
+local luckyBlocksConfig = require(ReplicatedStorage.src.GameConfiguration.General.luckyBlocksConfig)
 
 -- Types
 type StandProfile = {
@@ -19,6 +23,7 @@ type StandProfile = {
 	Taken: boolean,
 	Cash: number,
 	Owner: Player,
+	IsLuckyBlock: boolean?,
 }
 
 -- Helper Functions
@@ -57,39 +62,62 @@ function StandService:placeBrainrot(standProfile: StandProfile, brainrotReferenc
 		return
 	end
 
-	local mutation = brainrotHandler.GetMutationFromBrainrotReferenceId(brainrotReferenceId, standProfile.Owner)
-	standProfile.Brainrot = brainrotHandler.GetBrainrotAsset(
-		brainrotHandler.GetBrainrotNameFromReferenceId(brainrotReferenceId),
-		mutation,
-		true
-	)
+	local isLuckyBlock = brainrotReferenceId:find("LuckyBlock")
 
-	brainrotHandler.UpdateLevel(standProfile.Brainrot, brainrotReferenceId, nil, standProfile.Owner)
-	brainrotHandler.ToggleCountdownState(standProfile.Brainrot, false)
+	local mutation = not isLuckyBlock
+			and brainrotHandler.GetMutationFromBrainrotReferenceId(brainrotReferenceId, standProfile.Owner)
+		or nil
+	standProfile.Brainrot = not isLuckyBlock
+			and brainrotHandler.GetBrainrotAsset(
+				brainrotHandler.GetBrainrotNameFromReferenceId(brainrotReferenceId),
+				mutation,
+				true
+			)
+		or self.LuckyBlockService:GetBlockAsset(brainrotReferenceId:split("_")[1], true)
+
+	if not isLuckyBlock then
+		brainrotHandler.UpdateLevel(standProfile.Brainrot, brainrotReferenceId, nil, standProfile.Owner)
+		brainrotHandler.ToggleCountdownState(standProfile.Brainrot, false)
+	else
+		luckyBlockHandler.ToggleCountdownState(standProfile.Brainrot, false)
+	end
+
 	standProfile.Taken = true
 
 	standProfile.Brainrot.Name = brainrotReferenceId
 	standProfile.Brainrot:PivotTo(standProfile.Asset.Placeholder:GetPivot())
 	standProfile.Brainrot.Parent = standProfile.Asset.Brainrot
-	standProfile.Mutation = mutation
+	standProfile.Mutation = not isLuckyBlock and mutation
 
-	local elapsed = 0
-	standProfile.Connections.CashConnection = RunService.Heartbeat:Connect(function(deltaTime: number)
-		if elapsed < 1 then
-			elapsed += deltaTime
-			return
-		end
-		elapsed = 0
+	if isLuckyBlock then
+		self.LuckyBlockService:ConnectTimer(
+			standProfile.Owner,
+			standProfile.Brainrot,
+			self.DataService:GetValue(standProfile.Owner, "Inventory")[brainrotReferenceId]
+					and self.DataService:GetValue(standProfile.Owner, "Inventory")[brainrotReferenceId].ExpiresAt
+				or os.time() + luckyBlocksConfig.LuckyBlocks[brainrotReferenceId:split("_")[1]].UnlockDuration
+		)
+	end
 
-		local incomeRate = brainrotHandler.GetBrainrotIncomeRate(
-			brainrotReferenceId,
-			brainrotHandler.GetLevelFromBrainrotReferenceId(brainrotReferenceId, standProfile.Owner),
-			standProfile.Owner
-		) * self.DataService:GetValue(standProfile.Owner, "CashMultiplier")
+	if not isLuckyBlock then
+		local elapsed = 0
+		standProfile.Connections.CashConnection = RunService.Heartbeat:Connect(function(deltaTime: number)
+			if elapsed < 1 then
+				elapsed += deltaTime
+				return
+			end
+			elapsed = 0
 
-		standProfile.Asset.Cash.Value += incomeRate
-		standProfile.Cash += incomeRate
-	end)
+			local incomeRate = brainrotHandler.GetBrainrotIncomeRate(
+				brainrotReferenceId,
+				brainrotHandler.GetLevelFromBrainrotReferenceId(brainrotReferenceId, standProfile.Owner),
+				standProfile.Owner
+			) * self.DataService:GetValue(standProfile.Owner, "CashMultiplier")
+
+			standProfile.Asset.Cash.Value += incomeRate
+			standProfile.Cash += incomeRate
+		end)
+	end
 
 	self.Client.BrainrotPlaced:Fire(standProfile.Owner, standProfile.Asset, brainrotReferenceId)
 	if save then
@@ -101,6 +129,11 @@ end
 
 function StandService:removeBrainrot(standProfile: StandProfile, save: boolean?)
 	if typeof(standProfile.Brainrot) == "Instance" then
+		local isLuckyBlock = standProfile.Brainrot.Name:split("_")[1]
+		if isLuckyBlock then
+			self.LuckyBlockService:DisconnectAssetConnections(standProfile.Owner, standProfile.Brainrot)
+		end
+
 		standProfile.Brainrot:Destroy()
 		standProfile.Brainrot = nil
 	end
@@ -108,6 +141,11 @@ function StandService:removeBrainrot(standProfile: StandProfile, save: boolean?)
 	standProfile.Taken = false
 	if typeof(standProfile.Connections.CashConnection) == "RBXScriptConnection" then
 		standProfile.Connections.CashConnection:Disconnect()
+	end
+
+	local proxToDestroy = standProfile.Asset.ProximityPrompt:FindFirstChild("ProximityPrompt_LuckyBlockReveal")
+	if proxToDestroy then
+		proxToDestroy:Destroy()
 	end
 
 	self.Client.BrainrotRemoved:Fire(standProfile.Owner, standProfile.Asset)
@@ -208,6 +246,19 @@ function StandService:CollectCash(player: Player, standAsset)
 	}
 end
 
+function StandService:GetLuckyBlockFromReferenceId(player: Player, referenceId: string)
+	assert(isPlayer(player), "player arg must be a Player Instance")
+	assert(typeof(referenceId) == "string", "referenceId arg must be a string")
+
+	for _, standProfile: StandProfile in pairs(self.Profiles) do
+		if standProfile.Owner == player and standProfile.Brainrot.Name == referenceId and standProfile.IsLuckyBlock then
+			return standProfile.Brainrot
+		end
+	end
+
+	return nil
+end
+
 function StandService:ConnectStand(player: Player, standAsset: any)
 	assert(isPlayer(player), "player arg must be a Player Instance")
 	self:DisconnectStand(player, standAsset)
@@ -284,6 +335,13 @@ function StandService:DisconnectStand(player: Player, standAsset: any)
 			profileReference.Brainrot:Destroy()
 		end
 
+		-- Destroy Prox
+		local proxToDestroy = profileReference.Asset.ProximityPrompt:FindFirstChild("ProximityPrompt_LuckyBlockReveal")
+		if proxToDestroy then
+			proxToDestroy:Destroy()
+		end
+
+		--
 		self.Profiles[standAsset] = nil
 		resolve()
 	end)
@@ -295,6 +353,7 @@ function StandService:KnitInit()
 	self.InventoryService = knit.GetService("InventoryService")
 	self.BrainrotService = knit.GetService("BrainrotService")
 	self.PlotService = knit.GetService("PlotService")
+	self.LuckyBlockService = knit.GetService("LuckyBlockService")
 end
 
 function StandService:KnitStart()

@@ -12,6 +12,8 @@ return {
 		Rebirths = 0,
 		Inventory = {},
 
+		GroupRewardClaimed = false,
+
 		Index = (function()
 			local _table = {}
 			for mutation: string, _ in pairs(mutationConfig) do
@@ -54,6 +56,7 @@ return {
 		JoinedBefore = false,
 		AvatarHeadshotAssetId = "",
 
+		LuckyBlockCountdowns = {},
 		PurchaseHistory = {},
 	},
 }

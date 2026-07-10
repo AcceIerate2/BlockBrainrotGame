@@ -10,7 +10,7 @@ local function emit(particleEmitter: ParticleEmitter, parent: Instance)
 		return
 	end
 
-	local rate = particleEmitter:GetAttribute("Rate")
+	local rate = particleEmitter:GetAttribute("Rate") or particleEmitter:GetAttribute("EmitCount")
 	if not TypeCheck.number(rate) then
 		return
 	end

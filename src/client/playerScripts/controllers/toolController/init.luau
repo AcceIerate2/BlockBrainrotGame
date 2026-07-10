@@ -25,7 +25,7 @@ function ToolController:disconnectContainerConnections()
 end
 
 function ToolController:connectTool(tool: Tool)
-	if not tool:IsA("Tool") then
+	if not tool:IsA("Tool") or tool.Name == "Bat" then
 		return
 	end
 

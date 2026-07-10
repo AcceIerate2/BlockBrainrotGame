@@ -8,6 +8,7 @@ local knit = require(ReplicatedStorage.src.Packages.knit)
 -- Utility Modules
 local InstanceCreator = require(ReplicatedStorage.src.utility.InstanceCreator)
 local brainrotHandler = require(ReplicatedStorage.src.utility.brainrotHandler)
+local luckyBlockHandler = require(ReplicatedStorage.src.utility.luckyBlockHandler)
 
 -- Constants
 local LocalPlayer = Players.LocalPlayer
@@ -37,12 +38,11 @@ function BrainrotGiftController:clear()
 	end
 end
 
-function BrainrotGiftController:show(brainrotReferenceId: string, mutation: string)
+function BrainrotGiftController:show(brainrotReferenceId: string, mutation: string, type: string)
 	assert(
 		typeof(brainrotReferenceId) == "string",
 		"brainrotReferenceId arg must be a string" .. " " .. `{typeof(brainrotReferenceId)}`
 	)
-	assert(typeof(mutation) == "string", "mutation arg must be a string")
 
 	for _, player in pairs(Players:GetPlayers()) do
 		if player == LocalPlayer then
@@ -55,7 +55,7 @@ function BrainrotGiftController:show(brainrotReferenceId: string, mutation: stri
 			end
 
 			local newPrompt = InstanceCreator("ProximityPrompt", "GiftProximityPrompt", player.Character, {
-				ActionText = `Gift{mutation ~= "Default" and " " .. mutation or ""} {brainrotHandler.GetBrainrotDisplayName(
+				ActionText = `Gift{type == "Brainrot" and (mutation ~= "Default" and " " .. mutation or "") or ""} {brainrotHandler.GetBrainrotDisplayName(
 					brainrotReferenceId
 				)}?`,
 			}) :: ProximityPrompt
@@ -70,7 +70,7 @@ function BrainrotGiftController:show(brainrotReferenceId: string, mutation: stri
 						return
 					end
 
-					self:Gift(player.Name, brainrotReferenceId, mutation)
+					self:Gift(player.Name, brainrotReferenceId, mutation, type)
 				end),
 				Player = player,
 				Prompt = newPrompt,
@@ -90,15 +90,28 @@ function BrainrotGiftController:getPromptProfileFromPlayer(player: Player)
 	return
 end
 
+function BrainrotGiftController:RequestToGiftPlayer(
+	playerNameToGiftTo: string,
+	brainrotReferenceId: string,
+	mutation: string,
+	type: string
+)
+	return self.BrainrotGiftService:RequestToGiftPlayer({
+		Name = playerNameToGiftTo,
+		BrainrotReferenceId = brainrotReferenceId,
+		Mutation = mutation,
+		Type = type,
+	})
+end
+
 -- Public Methods
-function BrainrotGiftController:Gift(playerNameToGiftTo: string, brainrotReferenceId: string, mutation: string)
-	warn(playerNameToGiftTo, brainrotReferenceId, mutation)
-	self.BrainrotGiftService
-		:Gift({
-			Name = playerNameToGiftTo,
-			BrainrotReferenceId = brainrotReferenceId,
-			Mutation = mutation,
-		})
+function BrainrotGiftController:Gift(
+	playerNameToGiftTo: string,
+	brainrotReferenceId: string,
+	mutation: string,
+	type: string
+)
+	self:RequestToGiftPlayer(playerNameToGiftTo, brainrotReferenceId, mutation, type)
 		:andThen(function(response)
 			warn(response)
 		end)
@@ -108,12 +121,13 @@ end
 function BrainrotGiftController:ToggleGiftProximityPrompts(
 	toggle: boolean,
 	brainrotReferenceId: string,
-	mutation: string
+	mutation: string,
+	type: string
 )
 	assert(typeof(toggle) == "boolean", "toggle arg must be a boolean")
 	self:clear()
 	if toggle then
-		self:show(brainrotReferenceId, mutation)
+		self:show(brainrotReferenceId, mutation, type)
 	end
 end
 

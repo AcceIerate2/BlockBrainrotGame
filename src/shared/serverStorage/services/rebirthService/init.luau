@@ -80,8 +80,9 @@ function RebirthService:Rebirth(player: Player, skip: boolean?)
 		end
 	end
 
-	-- Apply rebirth count last
+	--
 	rebirthsValueObject:Set(newRebirths)
+	self.PlotService:UpdateCashMultiplierLabel(player)
 
 	return {
 		Status = true,
@@ -95,6 +96,7 @@ end
 -- LifeCycle
 function RebirthService:KnitInit()
 	self.DataService = knit.GetService("DataService")
+	self.PlotService = knit.GetService("PlotService")
 end
 
 return RebirthService

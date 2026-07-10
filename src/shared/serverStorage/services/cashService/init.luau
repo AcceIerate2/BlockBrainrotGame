@@ -59,7 +59,6 @@ end
 
 function CashService:KnitInit()
 	self.DataService = knit.GetService("DataService")
-	print("CashService Initialized.")
 end
 
 return CashService

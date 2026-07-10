@@ -71,11 +71,9 @@ function ProfileStoreService:endSession(player: Player)
 end
 
 function ProfileStoreService:KnitInit()
-	print("ProfileStoreService Initiated.")
 	local profileTemplate = self.Config.DataTemplate
 
-	local profileStoreName = RunService:IsStudio() and `{HttpService:GenerateGUID(false)}`
-		or `{HttpService:GenerateGUID(false)}`
+	local profileStoreName = RunService:IsStudio() and `{222}` or `{HttpService:GenerateGUID(false)}`
 	self.ProfileStore = profileStore.New(profileStoreName, profileTemplate)
 end
 
